@@ -3,228 +3,229 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
-import { generateToken } from "../utils/generateToken.js";
 import dotenv from "dotenv";
-import { log } from "console";
 dotenv.config();
-// Signup controller
+
+// ─── Email transporter ────────────────────────────────────────────────────────
+function createTransporter() {
+  return nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS, // Must be a Gmail App Password, not your login password
+    },
+  });
+}
+
+// ─── Signup ───────────────────────────────────────────────────────────────────
 export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationCode = crypto.randomBytes(3).toString("hex");
-
-    // Step 1: Send OTP email first (only in production)
-    if (process.env.NODE_ENV === "production") {
-      const transporter = nodemailer.createTransport({
-        service: "Gmail",
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: "Verify your email - Call Kaarigar",
-        text: `Your verification code is: ${verificationCode}`,
-      };
-
-      try {
-        await transporter.sendMail(mailOptions);
-      } catch (emailError) {
-        console.error("Email sending failed:", emailError);
-        return res
-          .status(500)
-          .json({ message: "Failed to send verification email." });
-      }
-    } else {
-      console.log("Signup verification email skipped (NODE_ENV != production)");
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields are required." });
     }
 
-    // Step 2: Save user only after email is sent
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationCode = crypto.randomBytes(3).toString("hex"); // 6-char hex code
+
+    // ✅ SAVE USER FIRST — email failure must never block account creation
     const user = new User({
       name,
       email,
       password: hashedPassword,
       verificationCode,
-      isVerified: false
+      isVerified: false,
     });
-
     await user.save();
 
-    res.status(200).json({ message: "Signup successful. OTP sent to your email." });
+    // ✅ Attempt to send verification email — log failure but don't crash
+    let emailSent = false;
+    try {
+      const transporter = createTransporter();
+      await transporter.sendMail({
+        from: `"DDS Team" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Verify your email — DDS",
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#f0f4ff;border-radius:16px;">
+            <h2 style="color:#1e3a8a;margin-bottom:8px;">Verify your email</h2>
+            <p style="color:#334155;margin-bottom:24px;">Hello <strong>${name}</strong>, use the code below to verify your account.</p>
+            <div style="background:#fff;border:1px solid #dde5f4;border-radius:12px;padding:24px;text-align:center;">
+              <p style="font-size:32px;font-weight:800;letter-spacing:0.2em;color:#2563eb;margin:0;">${verificationCode}</p>
+            </div>
+            <p style="color:#64748b;font-size:12px;margin-top:20px;">This code expires in 24 hours. If you didn't sign up, ignore this email.</p>
+          </div>
+        `,
+      });
+      emailSent = true;
+      console.log(`✅ Verification email sent to ${email}`);
+    } catch (mailErr) {
+      // Email failed — user is already saved, they can still verify manually or resend
+      console.error("❌ Verification email failed (user still created):", mailErr.message);
+    }
+
+    return res.status(200).json({
+      message: emailSent
+        ? "Signup successful. Verification code sent to your email."
+        : "Signup successful. We couldn't send the email right now — please contact support.",
+      emailSent,
+    });
+
   } catch (err) {
-    console.error("Signup Error:", err);
-    res.status(500).json({ message: "Signup failed", error: err.message });
+    console.error("❌ Signup Error:", err);
+    res.status(500).json({ message: "Signup failed.", error: err.message });
   }
 };
 
-//verify email 
+// ─── Verify Email ─────────────────────────────────────────────────────────────
 export const verifyEmail = async (req, res) => {
   const { email, verificationCode } = req.body;
-
   try {
     const user = await User.findOne({ email });
 
-    if (!user || user.verificationCode !== verificationCode) {
-      return res.status(400).json({ message: "Invalid verification code" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    if (user.isVerified) {
+      return res.status(200).json({ message: "Email already verified. Please log in." });
+    }
+    if (user.verificationCode !== verificationCode) {
+      return res.status(400).json({ message: "Invalid verification code." });
     }
 
     user.isVerified = true;
     user.verificationCode = undefined;
     await user.save();
 
-    res.status(200).json({ message: "Email verified successfully" });
+    res.status(200).json({ message: "Email verified successfully. You can now log in." });
   } catch (err) {
-    console.error("Verification Error:", err);
-    res.status(500).json({ message: "Verification failed", error: err.message });
+    console.error("❌ Verify Email Error:", err);
+    res.status(500).json({ message: "Verification failed.", error: err.message });
   }
 };
 
-// Login controller
+// ─── Login ────────────────────────────────────────────────────────────────────
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if email and password are provided
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required." });
     }
 
-    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials. User not found." });
+      return res.status(401).json({ message: "No account found with this email." });
     }
 
-    // Check if email is verified
     if (!user.isVerified) {
       return res.status(401).json({ message: "Email not verified. Please verify your email first." });
     }
 
-    // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Incorrect password" });
+      return res.status(401).json({ message: "Incorrect password." });
     }
 
-    // Check if JWT secret exists
     if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET not found in environment variables.");
+      console.error("❌ JWT_SECRET missing from env");
       return res.status(500).json({ message: "Server configuration error." });
     }
 
-    // Generate token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1d"
-    });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
     const { _id, name, privacyAccepted, termsAccepted } = user;
-    res.json({
-      token,
-      user: { _id, name, privacyAccepted, termsAccepted }
-    });
+    res.json({ token, user: { _id, name, privacyAccepted, termsAccepted } });
 
   } catch (err) {
-    console.error("Login Error:", err);
-    res.status(500).json({ message: "Login failed", error: err.message });
+    console.error("❌ Login Error:", err);
+    res.status(500).json({ message: "Login failed.", error: err.message });
   }
 };
 
-
-// Forgot Password Controller
-// Forgot Password
+// ─── Forgot Password ──────────────────────────────────────────────────────────
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found." });
 
-    // Check if reset link was sent recently (within 5 minutes)
+    // Rate-limit: don't spam reset emails
     if (user.resetPasswordExpires && user.resetPasswordExpires > Date.now()) {
       const remaining = Math.ceil((user.resetPasswordExpires - Date.now()) / 60000);
       return res.status(429).json({
-        message: `Reset link already sent. Please try again in ${remaining} minute(s).`,
+        message: `Reset link already sent. Try again in ${remaining} minute(s).`,
       });
     }
 
-    // Generate new reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = Date.now() + 5 * 60 * 1000; // 5 minutes
     await user.save();
 
-    const resetUrl = `http://82.29.165.206:8080/reset-password/${resetToken}`;
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
 
-    if (process.env.NODE_ENV === "production") {
-      const transporter = nodemailer.createTransport({
-        service: "Gmail",
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
+    try {
+      const transporter = createTransporter();
+      await transporter.sendMail({
+        from: `"DDS Team" <${process.env.EMAIL_USER}>`,
         to: email,
-        subject: "Password Reset Link",
-        text: `Click to reset your password: ${resetUrl}`,
-      };
-
-      await transporter.sendMail(mailOptions);
-    } else {
-      console.log(
-        "Forgot password email skipped (NODE_ENV != production). Reset URL:",
-        resetUrl
-      );
+        subject: "Password Reset — DDS",
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#f0f4ff;border-radius:16px;">
+            <h2 style="color:#1e3a8a;">Reset your password</h2>
+            <p style="color:#334155;">Click the button below to reset your password. This link expires in <strong>5 minutes</strong>.</p>
+            <a href="${resetUrl}" style="display:inline-block;margin-top:16px;padding:12px 28px;background:#2563eb;color:#fff;border-radius:9px;text-decoration:none;font-weight:700;">Reset Password</a>
+            <p style="color:#64748b;font-size:12px;margin-top:20px;">If you didn't request this, ignore this email.</p>
+          </div>
+        `,
+      });
+      res.status(200).json({ message: "Reset link sent to your email." });
+    } catch (mailErr) {
+      console.error("❌ Reset email failed:", mailErr.message);
+      res.status(500).json({ message: "Failed to send reset email. Please check server email config." });
     }
 
-    res.status(200).json({ message: "Reset link sent to your email." });
   } catch (err) {
-    console.error("Forgot Password Error:", err);
-    res.status(500).json({ message: "Failed to send reset email." });
+    console.error("❌ Forgot Password Error:", err);
+    res.status(500).json({ message: "Server error.", error: err.message });
   }
 };
 
-// Reset Password
+// ─── Reset Password ───────────────────────────────────────────────────────────
 export const resetPassword = async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
 
   if (!password) {
-    return res.status(400).json({ message: "Password is required" });
+    return res.status(400).json({ message: "Password is required." });
   }
 
   try {
-    // ✅ consistent field names used here
     const user = await User.findOne({
       resetPasswordToken: token,
       resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid or expired token" });
+      return res.status(400).json({ message: "Invalid or expired reset link." });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    user.password = hashedPassword;
-
+    user.password = await bcrypt.hash(password, 10);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
-
     await user.save();
 
-    res.status(200).json({ message: "Password has been reset" });
+    res.status(200).json({ message: "Password reset successfully. You can now log in." });
   } catch (err) {
-    console.error("Reset error:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("❌ Reset Password Error:", err);
+    res.status(500).json({ message: "Server error.", error: err.message });
   }
 };
