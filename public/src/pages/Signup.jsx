@@ -166,12 +166,7 @@ export default function Signup() {
       </div>
 
       {/* Terms footer */}
-      <p style={{ position: "absolute", bottom: 16, left: 0, right: 0, textAlign: "center", fontSize: 11, color: T.muted }}>
-        By signing up, you agree to our{" "}
-        <Link to="/terms" style={{ color: T.blue, textDecoration: "none" }}>Terms of Service</Link>
-        {" "}and{" "}
-        <Link to="/privacy" style={{ color: T.blue, textDecoration: "none" }}>Privacy Policy</Link>
-      </p>
+      
     </div>
   );
 }
