@@ -1,18 +1,9 @@
 import express from "express";
-import {
-  signup,
-  verifyEmail,
-  resendOtp,
-  login,
-  forgotPassword,
-  resetPassword,
-} from "../controllers/authController.js";
+import { signup, login, forgotPassword, resetPassword } from "../controllers/authController.js";
 
 const router = express.Router();
 
 router.post("/signup", signup);
-router.post("/verify-email", verifyEmail);
-router.post("/resend-otp", resendOtp);       // ✅ NEW
 router.post("/login", login);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);

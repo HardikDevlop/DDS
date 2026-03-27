@@ -181,7 +181,7 @@ export default function Signup() {
     try {
       setIsLoading(true);
       await axios.post(`${BASE_URL}/api/auth/signup`, form);
-      navigate("/verify-email", { state: { email: form.email } });
+      navigate("/login");
     } catch (err) {
       const msg = err.response?.data?.message;
       setError(msg || "Signup failed. Please try again.");

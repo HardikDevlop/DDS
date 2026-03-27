@@ -17,7 +17,7 @@ import HelpCenter from './pages/HelpCenter';
 import Checkout from './pages/Checkout';
 import ProtectedRoute from './Components/ProtectedRoute';
 import PrivateRoute from './Components/PrivateRoute';
-import VerifyEmail from './pages/VerifyEmail';
+// import VerifyEmail from './pages/VerifyEmail';
 import CustomerProfile from './pages/CustomerProfile';
 import Contact from "./pages/Contact";
 import Pricing from './pages/Pricing';
@@ -72,7 +72,7 @@ export default function App() {
           <Route path="/subservices" element={<Subservices />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
+          {/* <Route path="/verify-email" element={<VerifyEmail />} /> */}
           <Route path="/my-orders" element={<PrivateRoute><MyOrders /></PrivateRoute>} />
           <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
           <Route path="/checkout" element={<Checkout />} />
