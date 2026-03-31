@@ -253,7 +253,7 @@ export default function Signup() {
 
             {/* Password */}
             <div>
-              <label className="su-label">Password</label>
+              <label className="su-label">Create Password</label>
               <div className="su-input-wrap">
                 <input
                   type={showPw ? "text" : "password"}

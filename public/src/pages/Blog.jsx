@@ -56,8 +56,8 @@ const CSS = `
 `;
 
 const dummyBlogs = [
-  { _id: "1", name: "How to Clean Your Bathroom Efficiently", description: "Learn quick and effective bathroom cleaning techniques.", category: "Cleaning", rating: 4.5, images: ["/img/carpenter.jpg"] },
-  { _id: "2", name: "Top 5 Plumbing Tips for Beginners", description: "Simple fixes for common plumbing problems.", category: "Plumbing", rating: 4.2, images: ["/img/cash-icon.png"] },
+  { _id: "1", name: "How to Clean Your Bathroom Efficiently", description: "Learn quick and effective bathroom cleaning techniques.", category: "Cleaning", rating: 4.5, images: ["/img/plumbing3.avif"] },
+  { _id: "2", name: "Top 5 Plumbing Tips for Beginners", description: "Simple fixes for common plumbing problems.", category: "Plumbing", rating: 4.2, images: ["/img/leakagefix.jpg"] },
   { _id: "3", name: "DIY Electrical Repairs at Home", description: "Safety first! Basic electrical fixes you can do yourself.", category: "Electrical", rating: 4.7, images: ["/img/electrician org.jpg"] },
   { _id: "4", name: "Home Cleaning Checklist", description: "Your ultimate guide to a spotless home.", category: "Cleaning", rating: 4.6, images: ["/img/cleaninggg.jpg"] },
   { _id: "5", name: "Essential Repair Tools You Need", description: "Tools that every homeowner should have.", category: "Repairs", rating: 4.3, images: ["/img/slide1.jpg"] },

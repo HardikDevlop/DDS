@@ -11,17 +11,14 @@ const CATEGORIES = [
   { key: "repair", label: "Repair" },
   { key: "plumbing", label: "Plumbing" },
   { key: "electrical", label: "Electrical" },
-  { key: "painting", label: "Painting" },
-  { key: "pest", label: "Pest Control" },
+  
 ];
 
 function inferCategory(name = "") {
   const n = name.toLowerCase();
   if (n.includes("clean")) return "cleaning";
-  if (n.includes("paint")) return "painting";
   if (n.includes("plumb") || n.includes("pipe")) return "plumbing";
   if (n.includes("electric") || n.includes("ac") || n.includes("appliance")) return "electrical";
-  if (n.includes("pest") || n.includes("termite")) return "pest";
   if (n.includes("repair")) return "repair";
   return "all";
 }

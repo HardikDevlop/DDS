@@ -241,7 +241,7 @@ export default function Home() {
                   <span style={{
                     background: "linear-gradient(90deg,#93c5fd,#67e8f9)",
                     WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-                  }}>IT Service Provider</span>
+                  }}>DDS Online</span>
                 </h1>
 
                 <p style={{ fontSize: 15, color: "rgba(255,255,255,0.78)", marginBottom: 28, lineHeight: 1.7, fontWeight: 300 }}>
@@ -254,9 +254,11 @@ export default function Home() {
                     <FiPhone size={14} /> Call Now
                   </a>
                   <a
-                    href={`https://wa.me/${phoneNumber.replace("+", "")}`}
-                    target="_blank" rel="noopener noreferrer"
-                    style={btn.green} className="hv-green"
+                    href="https://wa.me/918962062263?text=Hello%20"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={btn.green}
+                    className="hv-green"
                   >
                     <FaWhatsapp size={15} /> WhatsApp
                   </a>
@@ -424,14 +426,18 @@ export default function Home() {
                   Our Tailored Provider
                 </h3>
                 <p style={{ margin: "0 0 14px", fontSize: 12, color: T.muted }}>Reach us anytime</p>
+
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {[T.amber, T.blue].map((accent, i) => (
+                  {[
+                    { accent: T.amber, phone: "+91-9098268872", email: "admin@ddsonline.in" },
+                    { accent: T.blue, phone: "+91-8962062263", email: "support@ddsonline.in" },
+                  ].map((item, i) => (
                     <div key={i} style={{ background: T.bgSoft, borderRadius: 10, border: `1px solid ${T.border}`, padding: "12px 14px" }}>
-                      <a href={`tel:${phoneNumber}`} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.textMid, textDecoration: "none", marginBottom: 7 }}>
-                        <FiPhone size={14} style={{ color: accent, flexShrink: 0 }} /> {phoneNumber}
+                      <a href={`tel:${item.phone}`} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.textMid, textDecoration: "none", marginBottom: 7 }}>
+                        <FiPhone size={14} style={{ color: item.accent, flexShrink: 0 }} /> {item.phone}
                       </a>
-                      <a href={`mailto:${emailAddress}`} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.textMid, textDecoration: "none" }}>
-                        <FiMail size={14} style={{ color: accent, flexShrink: 0 }} /> {emailAddress}
+                      <a href={`mailto:${item.email}`} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.textMid, textDecoration: "none" }}>
+                        <FiMail size={14} style={{ color: item.accent, flexShrink: 0 }} /> {item.email}
                       </a>
                     </div>
                   ))}
