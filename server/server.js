@@ -32,6 +32,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'https://admindharm.ddsonline.in/',
+  'https://admindharm.ddsonline.in',
   'https://ddsonline.in',
   // 'http://localhost:5175',
   // 'https://admin-mmo0.onrender.com',

@@ -24,86 +24,172 @@ const T = {
 };
 
 const CSS = `
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
   .pd-root {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background: ${T.bg}; min-height: 100vh; color: ${T.text};
+    background: ${T.bg};
+    min-height: 100vh;
+    color: ${T.text};
   }
 
-  /* mobile header */
+  /* ── Mobile header ── */
   .pd-mobile-header {
-    display: none; position: sticky; top:0; z-index:40;
-    background: ${T.bgWhite}; border-bottom: 1px solid ${T.border};
-    padding: 12px 16px; align-items: center; justify-content: space-between;
+    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: ${T.bgWhite};
+    border-bottom: 1px solid ${T.border};
+    padding: 12px 16px;
+    align-items: center;
+    justify-content: space-between;
   }
-  @media(max-width:768px){ .pd-mobile-header{display:flex;} .pd-desktop{display:none!important;} .pd-mobile{display:block!important;} }
-  @media(min-width:769px){ .pd-mobile{display:none!important;} }
 
-  /* thumbnails */
+  /* ── Desktop / Mobile visibility ── */
+  @media (max-width: 768px) {
+    .pd-mobile-header { display: flex; }
+    .pd-desktop { display: none !important; }
+    .pd-mobile { display: block !important; }
+  }
+  @media (min-width: 769px) {
+    .pd-mobile { display: none !important; }
+    .pd-desktop { display: grid; }
+  }
+
+  /* ── Thumbnails ── */
   .thumb {
-    height: 68px; width: 68px; border-radius: 9px; object-fit: cover; cursor: pointer;
-    border: 2px solid ${T.border}; flex-shrink: 0; transition: border-color 0.15s, transform 0.15s;
+    height: 68px;
+    width: 68px;
+    border-radius: 9px;
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid ${T.border};
+    flex-shrink: 0;
+    transition: border-color 0.15s, transform 0.15s;
   }
   .thumb.active { border-color: ${T.blue}; transform: scale(1.05); }
   .thumb:hover { border-color: #93c5fd; }
 
-  /* sub-service chips */
+  /* ── Sub-service chips (desktop) ── */
   .sub-chip {
-    display: flex; flex-direction: column; align-items: center;
-    background: ${T.bgSoft}; border: 1.5px solid ${T.border};
-    border-radius: 12px; padding: 10px 8px;
-    cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: ${T.bgSoft};
+    border: 1.5px solid ${T.border};
+    border-radius: 12px;
+    padding: 10px 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    position: relative;
   }
   .sub-chip:hover { border-color: #93c5fd; box-shadow: 0 4px 14px ${T.shadow}; }
-  .sub-chip.selected { border-color: ${T.blue}; box-shadow: 0 0 0 2px rgba(37,99,235,0.18); background: ${T.bluePale}; }
+  .sub-chip.selected {
+    border-color: ${T.blue};
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.18);
+    background: ${T.bluePale};
+  }
 
-  /* add to cart btn */
+  /* ── Add to Cart button ── */
   .add-btn {
-    width: 100%; padding: 14px; border: none; border-radius: 12px;
-    background: ${T.blue}; color: #fff;
-    font-size: 15px; font-weight: 700; font-family: inherit;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-    transition: background 0.15s, transform 0.15s;
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 14px;
+    background: ${T.blue};
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s, transform 0.12s;
+    letter-spacing: 0.01em;
   }
   .add-btn:hover { background: ${T.blueDark}; transform: translateY(-1px); }
+  .add-btn:active { transform: translateY(0); }
 
-  /* modal overlay */
+  /* ── Modal overlay ── */
   .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-    display: flex; align-items: center; justify-content: center; z-index: 60; padding: 16px;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    padding: 16px;
   }
-  @keyframes scaleIn { from{transform:scale(0.92);opacity:0} to{transform:scale(1);opacity:1} }
+  @keyframes scaleIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   .modal-card {
-    background: ${T.bgWhite}; border-radius: 20px; padding: 32px 28px;
-    width: 100%; max-width: 360px; text-align: center;
+    background: ${T.bgWhite};
+    border-radius: 20px;
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
     animation: scaleIn 0.22s ease both;
   }
 
-  /* mobile sticky bottom */
-  .mobile-sticky {
-    display: none; position: fixed; bottom: 0; left: 0; right: 0;
-    background: ${T.bgWhite}; border-top: 1px solid ${T.border};
-    padding: 12px 16px; z-index: 40;
-    box-shadow: 0 -4px 16px ${T.shadowSm};
+  /* ── Mobile sticky bottom bar ── */
+  .mobile-sticky-bar {
+    display: none;
   }
-  @media(max-width:768px){ .mobile-sticky{ display:block; } }
+  @media (max-width: 768px) {
+    /* Push content up so sticky bar never overlaps it */
+    .pd-mobile { padding-bottom: 90px; }
 
-  /* icon btn */
+    .mobile-sticky-bar {
+      display: block;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      background: ${T.bgWhite};
+      border-top: 1.5px solid ${T.border};
+      padding: 12px 16px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    }
+
+    .mobile-sticky-bar .add-btn {
+      border-radius: 12px;
+      font-size: 15px;
+      padding: 14px 16px;
+    }
+  }
+
+  /* ── Icon button ── */
   .icon-btn {
-    width: 36px; height: 36px; border-radius: 8px;
-    background: none; border: none; cursor: pointer; color: ${T.textMid};
-    display: flex; align-items: center; justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: ${T.textMid};
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: background 0.15s;
   }
   .icon-btn:hover { background: ${T.bluePale}; color: ${T.blue}; }
 
-  /* info card */
+  /* ── Info card ── */
   .info-card {
-    background: ${T.bgWhite}; border: 1px solid ${T.border};
-    border-radius: 14px; padding: 20px;
+    background: ${T.bgWhite};
+    border: 1px solid ${T.border};
+    border-radius: 14px;
+    padding: 20px;
     box-shadow: 0 2px 12px ${T.shadowSm};
   }
 
-  @keyframes spin { to{ transform: rotate(360deg); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
 `;
 
 export default function ProductDetails() {
@@ -119,11 +205,15 @@ export default function ProductDetails() {
   const [mainImage, setMainImage] = useState(0);
   const [selectedSubServices, setSelectedSubServices] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
-  const [subServiceToAdd, setSubServiceToAdd] = useState("");
 
   useEffect(() => {
-    axios.get(`${BASE_URL}/api/products/${id}`)
-      .then((res) => { setProduct(res.data); setTotalPrice(res.data.visitingPrice); setIsLoading(false); })
+    axios
+      .get(`${BASE_URL}/api/products/${id}`)
+      .then((res) => {
+        setProduct(res.data);
+        setTotalPrice(res.data.visitingPrice);
+        setIsLoading(false);
+      })
       .catch(() => setIsLoading(false));
   }, [id]);
 
@@ -134,29 +224,28 @@ export default function ProductDetails() {
     }
   }, [selectedSubServices, product]);
 
-  const handleAddSubService = () => {
-    if (!subServiceToAdd) return;
-    if (selectedSubServices.find((sub) => sub.name === subServiceToAdd)) { alert("Sub-service already selected."); return; }
-    const selected = Array.isArray(product.subServices) ? product.subServices.find((s) => s.name === subServiceToAdd) : null;
-    if (selected) { setSelectedSubServices((prev) => [...prev, selected]); setSubServiceToAdd(""); }
+  const toggleSub = (sub) => {
+    if (selectedSubServices.find((s) => s.name === sub.name)) {
+      setSelectedSubServices((prev) => prev.filter((s) => s.name !== sub.name));
+    } else {
+      setSelectedSubServices((prev) => [...prev, sub]);
+    }
   };
-
-  const handleRemoveSubService = (name) =>
-    setSelectedSubServices((prev) => prev.filter((sub) => sub.name !== name));
 
   const handleAddToCart = () => {
     if (!isAuthenticated) { navigate("/login"); return; }
-    if (cartItems.some((item) => item.id === product._id)) { setShowAlreadyInCart(true); return; }
-    addToCart({ id: product._id, title: product.name, price: product.visitingPrice, imageUrl: Array.isArray(product.images) && product.images[0] ? product.images[0] : "", subServices: selectedSubServices });
-    setShowAddedCard(true);
-  };
-
-  const toggleSub = (sub) => {
-    if (selectedSubServices.find(s => s.name === sub.name)) {
-      handleRemoveSubService(sub.name);
-    } else {
-      setSelectedSubServices(prev => [...prev, sub]);
+    if (cartItems.some((item) => item.id === product._id)) {
+      setShowAlreadyInCart(true);
+      return;
     }
+    addToCart({
+      id: product._id,
+      title: product.name,
+      price: product.visitingPrice,
+      imageUrl: Array.isArray(product.images) && product.images[0] ? product.images[0] : "",
+      subServices: selectedSubServices,
+    });
+    setShowAddedCard(true);
   };
 
   /* ── Loading ── */
@@ -187,6 +276,15 @@ export default function ProductDetails() {
   const images = Array.isArray(product.images) ? product.images : [];
   const hasSubs = Array.isArray(product.subServices) && product.subServices.length > 0;
 
+  /* ── Cart button shared content ── */
+  const CartIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <path d="M16 10a4 4 0 01-8 0" />
+    </svg>
+  );
+
   return (
     <div className="pd-root">
       <style>{CSS}</style>
@@ -203,8 +301,10 @@ export default function ProductDetails() {
       </div>
 
       {/* ══ DESKTOP LAYOUT ══ */}
-      <div className="pd-desktop" style={{ margin: "0 auto", padding: "36px 20px 60px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 36, alignItems: "start" }}>
-
+      <div
+        className="pd-desktop"
+        style={{ maxWidth: 1100, margin: "0 auto", padding: "36px 20px 60px", gridTemplateColumns: "1fr 1fr", gap: 36, alignItems: "start" }}
+      >
         {/* Left — images */}
         <div>
           <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${T.border}`, marginBottom: 12, boxShadow: `0 4px 20px ${T.shadowSm}` }}>
@@ -240,17 +340,17 @@ export default function ProductDetails() {
               <h3 style={{ fontSize: 14, fontWeight: 800, color: T.text, marginBottom: 14 }}>Available Add-ons</h3>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
                 {product.subServices.map((sub, i) => {
-                  const isSelected = selectedSubServices.some(s => s.name === sub.name);
+                  const isSelected = selectedSubServices.some((s) => s.name === sub.name);
                   return (
                     <div key={i} className={`sub-chip${isSelected ? " selected" : ""}`} onClick={() => toggleSub(sub)}>
                       {sub.image && (
-                        <img src={`${BASE_URL}/uploads/${sub.image}`} alt={sub.name} style={{ width: "100%", height: 52, objectFit: "cover", borderRadius: 8, marginBottom: 6 }} onError={e => { e.target.src = "https://via.placeholder.com/100x52?text=Service"; }} />
+                        <img src={`${BASE_URL}/uploads/${sub.image}`} alt={sub.name} style={{ width: "100%", height: 52, objectFit: "cover", borderRadius: 8, marginBottom: 6 }} onError={(e) => { e.target.src = "https://via.placeholder.com/100x52?text=Service"; }} />
                       )}
                       <span style={{ fontSize: 11, fontWeight: 600, color: T.text, textAlign: "center", lineHeight: 1.3, marginBottom: 4 }}>{sub.name}</span>
                       <span style={{ fontSize: 12, fontWeight: 800, color: T.green }}>₹{sub.price}</span>
                       {isSelected && (
                         <button
-                          onClick={e => { e.stopPropagation(); handleRemoveSubService(sub.name); }}
+                          onClick={(e) => { e.stopPropagation(); toggleSub(sub); }}
                           style={{ position: "absolute", top: 6, right: 6, background: "#ef4444", color: "#fff", border: "none", borderRadius: "50%", width: 20, height: 20, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
                         >×</button>
                       )}
@@ -262,17 +362,15 @@ export default function ProductDetails() {
           )}
 
           <button className="add-btn" onClick={handleAddToCart}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" />
-            </svg>
+            <CartIcon />
             Add to Cart — ₹{totalPrice}
           </button>
         </div>
       </div>
 
       {/* ══ MOBILE LAYOUT ══ */}
-      <div className="pd-mobile" style={{ paddingBottom: 80 }}>
-        {/* Image */}
+      <div className="pd-mobile">
+        {/* Hero image */}
         <div style={{ position: "relative" }}>
           <img
             src={images[mainImage] ? `${BASE_URL}/uploads/${images[mainImage]}` : "https://via.placeholder.com/400x280?text=Service"}
@@ -286,6 +384,7 @@ export default function ProductDetails() {
           )}
         </div>
 
+        {/* Thumbnail strip */}
         {images.length > 1 && (
           <div style={{ background: T.bgWhite, padding: "12px 16px", display: "flex", gap: 10, overflowX: "auto" }}>
             {images.map((img, i) => (
@@ -294,11 +393,11 @@ export default function ProductDetails() {
           </div>
         )}
 
-        {/* Info */}
+        {/* Title + price */}
         <div style={{ background: T.bgWhite, padding: "20px 16px", borderBottom: `1px solid ${T.border}` }}>
           <h1 style={{ fontSize: 20, fontWeight: 800, color: T.text, marginBottom: 8 }}>{product.name}</h1>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-            <span style={{ fontSize: 22, fontWeight: 800, color: T.blue }}>₹{totalPrice}</span>
+            <span style={{ fontSize: 24, fontWeight: 800, color: T.blue }}>₹{totalPrice}</span>
             <span style={{ fontSize: 12, color: T.muted }}>Visiting: ₹{product.visitingPrice}</span>
           </div>
         </div>
@@ -309,11 +408,26 @@ export default function ProductDetails() {
             <h3 style={{ fontSize: 15, fontWeight: 800, color: T.text, marginBottom: 14 }}>Available Add-ons</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {product.subServices.map((sub, i) => {
-                const isSelected = selectedSubServices.some(s => s.name === sub.name);
+                const isSelected = selectedSubServices.some((s) => s.name === sub.name);
                 return (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: `1.5px solid ${isSelected ? T.blue : T.border}`, borderRadius: 12, background: isSelected ? T.bluePale : T.bgSoft, transition: "border-color 0.15s, background 0.15s" }}>
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "12px 14px",
+                      border: `1.5px solid ${isSelected ? T.blue : T.border}`,
+                      borderRadius: 12,
+                      background: isSelected ? T.bluePale : T.bgSoft,
+                      transition: "border-color 0.15s, background 0.15s",
+                    }}
+                  >
                     {sub.image && (
-                      <img src={`${BASE_URL}/uploads/${sub.image}`} alt={sub.name} style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 8, flexShrink: 0 }} onError={e => { e.target.src = "https://via.placeholder.com/48x48?text=S"; }} />
+                      <img
+                        src={`${BASE_URL}/uploads/${sub.image}`}
+                        alt={sub.name}
+                        style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 8, flexShrink: 0 }}
+                        onError={(e) => { e.target.src = "https://via.placeholder.com/48x48?text=S"; }}
+                      />
                     )}
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 2 }}>{sub.name}</p>
@@ -321,7 +435,14 @@ export default function ProductDetails() {
                     </div>
                     <button
                       onClick={() => toggleSub(sub)}
-                      style={{ padding: "7px 14px", borderRadius: 8, border: "none", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer", background: isSelected ? "#fee2e2" : T.bluePale, color: isSelected ? "#dc2626" : T.blue, transition: "background 0.15s" }}
+                      style={{
+                        padding: "8px 16px", borderRadius: 8, border: "none",
+                        fontWeight: 700, fontSize: 12, fontFamily: "inherit", cursor: "pointer",
+                        background: isSelected ? "#fee2e2" : T.bluePale,
+                        color: isSelected ? "#dc2626" : T.blue,
+                        transition: "background 0.15s",
+                        flexShrink: 0,
+                      }}
                     >
                       {isSelected ? "Remove" : "Add"}
                     </button>
@@ -330,6 +451,7 @@ export default function ProductDetails() {
               })}
             </div>
 
+            {/* Selected summary */}
             {selectedSubServices.length > 0 && (
               <div style={{ marginTop: 14, background: T.bluePale, border: `1px solid #bcd0fa`, borderRadius: 10, padding: "12px 14px" }}>
                 <p style={{ fontSize: 12, fontWeight: 700, color: T.blue, marginBottom: 8 }}>Selected add-ons</p>
@@ -339,20 +461,32 @@ export default function ProductDetails() {
                     <span style={{ fontWeight: 700, color: T.green }}>₹{sub.price}</span>
                   </div>
                 ))}
+                <div style={{ borderTop: `1px solid #bcd0fa`, marginTop: 8, paddingTop: 8, display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Total</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: T.blue }}>₹{totalPrice}</span>
+                </div>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Mobile sticky bottom */}
-      <div className="mobile-sticky">
-        <button className="add-btn" onClick={handleAddToCart}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" />
-          </svg>
-          Add to Cart — ₹{totalPrice}
-        </button>
+      {/* ══ MOBILE STICKY BOTTOM BAR ══ */}
+      <div className="mobile-sticky-bar">
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 11, color: T.muted, marginBottom: 1 }}>Total price</p>
+            <p style={{ fontSize: 18, fontWeight: 800, color: T.blue }}>₹{totalPrice}</p>
+          </div>
+          <button
+            className="add-btn"
+            onClick={handleAddToCart}
+            style={{ flex: 2, padding: "14px 16px" }}
+          >
+            <CartIcon />
+            Add to Cart
+          </button>
+        </div>
       </div>
 
       {/* ── Modal: Added to cart ── */}
@@ -365,7 +499,7 @@ export default function ProductDetails() {
             <h3 style={{ fontSize: 17, fontWeight: 800, color: T.text, marginBottom: 6 }}>Added to Cart!</h3>
             <p style={{ fontSize: 13, color: T.muted, marginBottom: 22 }}>Your service has been added successfully.</p>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setShowAddedCard(false)} style={{ flex: 1, padding: "11px", background: T.bgSoft, border: `1px solid ${T.border}`, borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", color: T.textMid }}>Continue Shopping</button>
+              <button onClick={() => setShowAddedCard(false)} style={{ flex: 1, padding: "11px", background: T.bgSoft, border: `1px solid ${T.border}`, borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", color: T.textMid }}>Continue</button>
               <button onClick={() => { setShowAddedCard(false); navigate("/cart"); }} style={{ flex: 1, padding: "11px", background: T.blue, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", color: "#fff" }}>View Cart</button>
             </div>
           </div>
