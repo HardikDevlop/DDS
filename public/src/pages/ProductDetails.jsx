@@ -224,6 +224,35 @@ export default function ProductDetails() {
     }
   }, [selectedSubServices, product]);
 
+  const [shareFeedback, setShareFeedback] = useState(""); // "copied" | "shared" | ""
+
+  const handleShare = async () => {
+    const shareData = {
+      title: product?.name || "Check out this service",
+      text: `${product?.name} — starting at ₹${product?.visitingPrice}`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        setShareFeedback("shared");
+      } catch (err) {
+        // User cancelled — no feedback needed
+      }
+    } else {
+      // Fallback: copy URL to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        setShareFeedback("copied");
+      } catch {
+        setShareFeedback("copied");
+      }
+    }
+
+    setTimeout(() => setShareFeedback(""), 2000);
+  };
+
   const toggleSub = (sub) => {
     if (selectedSubServices.find((s) => s.name === sub.name)) {
       setSelectedSubServices((prev) => prev.filter((s) => s.name !== sub.name));
@@ -295,8 +324,42 @@ export default function ProductDetails() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
         </button>
         <span style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Service Details</span>
-        <button className="icon-btn">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
+        <button
+          className="icon-btn"
+          onClick={handleShare}
+          title={shareFeedback === "copied" ? "Link copied!" : "Share this service"}
+          style={{ position: "relative" }}
+        >
+          {shareFeedback === "copied" ? (
+            /* Checkmark — link was copied to clipboard */
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          ) : shareFeedback === "shared" ? (
+            /* Sent checkmark — native share succeeded */
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.blue} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          ) : (
+            /* Default share icon */
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+          )}
+          {/* Tooltip feedback bubble */}
+          {shareFeedback && (
+            <span style={{
+              position: "absolute", bottom: "calc(100% + 8px)", right: 0,
+              background: T.text, color: "#fff",
+              fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
+              borderRadius: 6, padding: "4px 8px",
+              pointerEvents: "none",
+              animation: "scaleIn 0.15s ease both",
+            }}>
+              {shareFeedback === "copied" ? "Link copied!" : "Shared!"}
+            </span>
+          )}
         </button>
       </div>
 
