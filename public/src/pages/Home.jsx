@@ -591,7 +591,7 @@ function ServiceCard({ service, navigate, BASE_URL }) {
         <img
           src={
             Array.isArray(service.images) && service.images[0]
-              ? `${BASE_URL}/uploads/${service.images[0]}`
+              ? (service.images[0].startsWith('http') ? service.images[0] : `${BASE_URL}/uploads/${service.images[0]}`)
               : "/default-service.jpg"
           }
           alt={service.name}

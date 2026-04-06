@@ -172,7 +172,7 @@ export default function EditService() {
                   {existingImages.map((img, idx) => (
                     <div key={idx} className="relative">
                       <img
-                        src={`${BASE_URL}/uploads/${img}`}
+                        src={img.startsWith('http') ? img : `${BASE_URL}/uploads/${img}`}
                         alt=""
                         className="w-24 h-16 object-cover rounded-xl border border-slate-200"
                       />

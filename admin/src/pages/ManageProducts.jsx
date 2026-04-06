@@ -147,7 +147,7 @@ function EditProductModal({ product, onClose, onSave }) {
               {existingImages.map((img, idx) => (
                 <div key={idx} className="relative">
                   <img
-                    src={`${BASE_URL}/uploads/${img}`}
+                    src={img.startsWith('http') ? img : `${BASE_URL}/uploads/${img}`}
                     alt=""
                     className="w-20 h-16 object-cover border border-slate-200 rounded-xl"
                   />
@@ -237,7 +237,7 @@ function EditProductModal({ product, onClose, onSave }) {
                     <div className="mt-2 flex items-center gap-2">
                       <span className="text-xs text-slate-500">Current:</span>
                       <img
-                        src={`${BASE_URL}/uploads/${sub.existingImage}`}
+                        src={sub.existingImage.startsWith('http') ? sub.existingImage : `${BASE_URL}/uploads/${sub.existingImage}`}
                         alt="Current"
                         className="w-16 h-16 object-cover rounded-lg border"
                         onError={(e) => (e.target.src = "/img/default-service.png")}
@@ -355,7 +355,7 @@ export default function ManageProducts() {
                 <img
                   src={
                     product.images?.[0]
-                      ? `${BASE_URL}/uploads/${product.images[0]}`
+                      ? (product.images[0].startsWith('http') ? product.images[0] : `${BASE_URL}/uploads/${product.images[0]}`)
                       : "/img/default-service.png"
                   }
                   alt={product.name}
@@ -382,7 +382,7 @@ export default function ManageProducts() {
                         {product.subServices.map((sub, idx) => (
                           <li key={idx} className="flex items-center gap-3">
                             <img
-                              src={sub.image ? `${BASE_URL}/uploads/${sub.image}` : "/img/default-service.png"}
+                              src={sub.image ? (sub.image.startsWith('http') ? sub.image : `${BASE_URL}/uploads/${sub.image}`) : "/img/default-service.png"}
                               alt={sub.name}
                               className="w-10 h-10 object-cover rounded-lg border border-slate-100"
                               onError={(e) => (e.target.src = "/img/default-service.png")}

@@ -712,8 +712,8 @@ export default function Cart() {
                 const subTotal = subs.reduce((a, s) => a + Number(s.price), 0);
                 const itemTotal = Number(item.price) + subTotal;
                 const imgSrc = item.imageUrl
-                  ? `${BASE_URL}/uploads/${item.imageUrl}`
-                  : (Array.isArray(item.images) && item.images[0] ? `${BASE_URL}/uploads/${item.images[0]}` : "/default-service.png");
+                  ? (item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}/uploads/${item.imageUrl}`)
+                  : (Array.isArray(item.images) && item.images[0] ? (item.images[0].startsWith('http') ? item.images[0] : `${BASE_URL}/uploads/${item.images[0]}`) : "/default-service.png");
 
                 return (
                   <div className="item-wrap" key={item.id || idx}>
@@ -731,7 +731,7 @@ export default function Cart() {
                             {subs.map((sub, si) => (
                               <div className="sub-chip" key={sub._id || sub.name || si}>
                                 <img
-                                  src={sub.image ? `${BASE_URL}/uploads/${sub.image}` : "/default-service.png"}
+                                  src={sub.image ? (sub.image.startsWith('http') ? sub.image : `${BASE_URL}/uploads/${sub.image}`) : "/default-service.png"}
                                   alt={sub.name} className="sub-chip-img"
                                   onError={e => { e.target.src = "/default-service.png"; }}
                                 />
@@ -866,7 +866,7 @@ export default function Cart() {
                             onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
                           >
                             <img
-                              src={sub.image ? `${BASE_URL}/uploads/${sub.image}` : "/default-service.png"}
+                              src={sub.image ? (sub.image.startsWith('http') ? sub.image : `${BASE_URL}/uploads/${sub.image}`) : "/default-service.png"}
                               alt={sub.name}
                               style={{ width: "100%", height: 90, objectFit: "cover", display: "block" }}
                               onError={e => { e.target.src = "/default-service.png"; }}

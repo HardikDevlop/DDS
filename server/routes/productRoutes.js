@@ -4,6 +4,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import cloudinary from "cloudinary";
 import {
   createProduct,
   getAllProducts,
@@ -16,21 +17,16 @@ import {
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const uploadDir = path.join(__dirname, "..", "uploads");
 
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  console.log("Created uploads directory:", uploadDir);
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
+// Configure Cloudinary
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+// Use memory storage for multer
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
@@ -65,11 +61,89 @@ const uploadFields = upload.fields([
   { name: "subServiceImages", maxCount: 10 },
 ]);
 
-router.post("/", uploadFields, handleMulterError, createProduct);
+// Helper function to upload to Cloudinary
+const uploadToCloudinary = (buffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.v2.uploader.upload_stream(
+      { folder },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result.secure_url);
+      }
+    );
+    stream.end(buffer);
+  });
+};
+
+router.post("/", uploadFields, handleMulterError, async (req, res, next) => {
+  try {
+    // Upload main images to Cloudinary
+    const mainImageUrls = [];
+    if (req.files && req.files.images) {
+      for (const file of req.files.images) {
+        const url = await uploadToCloudinary(file.buffer, "products/main");
+        mainImageUrls.push(url);
+      }
+    }
+
+    // Upload sub-service images to Cloudinary
+    const subServiceImageUrls = [];
+    if (req.files && req.files.subServiceImages) {
+      for (const file of req.files.subServiceImages) {
+        const url = await uploadToCloudinary(file.buffer, "products/subservices");
+        subServiceImageUrls.push(url);
+      }
+    }
+
+    // Attach URLs to req
+    req.cloudinaryUrls = {
+      mainImages: mainImageUrls,
+      subServiceImages: subServiceImageUrls,
+    };
+
+    next();
+  } catch (error) {
+    console.error("Cloudinary upload error:", error);
+    return res.status(500).json({ message: "Image upload failed", error: error.message });
+  }
+}, createProduct);
+
+router.put("/:id", uploadFields, handleMulterError, async (req, res, next) => {
+  try {
+    // Upload new main images to Cloudinary
+    const newMainImageUrls = [];
+    if (req.files && req.files.images) {
+      for (const file of req.files.images) {
+        const url = await uploadToCloudinary(file.buffer, "products/main");
+        newMainImageUrls.push(url);
+      }
+    }
+
+    // Upload new sub-service images to Cloudinary
+    const newSubServiceImageUrls = [];
+    if (req.files && req.files.subServiceImages) {
+      for (const file of req.files.subServiceImages) {
+        const url = await uploadToCloudinary(file.buffer, "products/subservices");
+        newSubServiceImageUrls.push(url);
+      }
+    }
+
+    // Attach URLs to req
+    req.cloudinaryUrls = {
+      mainImages: newMainImageUrls,
+      subServiceImages: newSubServiceImageUrls,
+    };
+
+    next();
+  } catch (error) {
+    console.error("Cloudinary upload error:", error);
+    return res.status(500).json({ message: "Image upload failed", error: error.message });
+  }
+}, updateProduct);
+
 router.get("/", getAllProducts);
 router.get("/popular", getPopularServices);
 router.get("/:id", getProductById);
-router.put("/:id", uploadFields, handleMulterError, updateProduct);
 router.delete("/:id", deleteProduct);
 
 export default router;

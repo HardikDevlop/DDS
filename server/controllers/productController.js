@@ -16,7 +16,7 @@ const parseJsonField = (value, fallback) => {
 export const createProduct = async (req, res) => {
   try {
     console.log("Request body:", req.body);
-    console.log("Request files:", req.files);
+    console.log("Cloudinary URLs:", req.cloudinaryUrls);
 
     if (!req.body.name) {
       return res.status(400).json({ message: "Service name is required" });
@@ -26,22 +26,16 @@ export const createProduct = async (req, res) => {
       return res.status(400).json({ message: "Visiting price is required" });
     }
 
-    const mainImages =
-      req.files && req.files.images
-        ? req.files.images.map((file) => file.filename)
-        : [];
+    const mainImages = req.cloudinaryUrls?.mainImages || [];
 
-    const subServiceImages =
-      req.files && req.files.subServiceImages
-        ? req.files.subServiceImages
-        : [];
+    const subServiceImages = req.cloudinaryUrls?.subServiceImages || [];
 
     const parsedSubServices = parseJsonField(req.body.subServices, []);
 
     const updatedSubServices = parsedSubServices.map((subService, index) => ({
       name: subService.name,
       price: subService.price,
-      image: subServiceImages[index]?.filename || null,
+      image: subServiceImages[index] || null,
     }));
 
     const newProduct = new Product({
@@ -86,29 +80,23 @@ export const getProductById = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     console.log("Update request body:", req.body);
-    console.log("Update request files:", req.files);
+    console.log("Cloudinary URLs:", req.cloudinaryUrls);
 
     const existingProduct = await Product.findById(req.params.id);
     if (!existingProduct) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    const newMainImages =
-      req.files && req.files.images
-        ? req.files.images.map((file) => file.filename)
-        : [];
+    const newMainImages = req.cloudinaryUrls?.mainImages || [];
 
-    const subServiceImages =
-      req.files && req.files.subServiceImages
-        ? req.files.subServiceImages
-        : [];
+    const newSubServiceImages = req.cloudinaryUrls?.subServiceImages || [];
 
     const parsedSubServices = parseJsonField(req.body.subServices, []);
 
     const updatedSubServices = parsedSubServices.map((subService, index) => ({
       name: subService.name,
       price: subService.price,
-      image: subServiceImages[index]?.filename || subService.image || null,
+      image: newSubServiceImages[index] || subService.image || null,
     }));
 
     const keptImages =

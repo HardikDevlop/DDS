@@ -554,7 +554,7 @@ function OrderCard({ order, onAssign, onComplete }) {
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-sm truncate text-slate-800">{item.title}</p>
                 <p className="text-xs text-slate-600">
-                  ₹{item.price} × {item.quantity || 1} = ₹{item.price * (item.quantity || 1)}
+                  ₹{parseFloat(item.price).toFixed(2)} × {item.quantity || 1} = ₹{(item.price * (item.quantity || 1)).toFixed(2)}
                 </p>
               </div>
             </div>
@@ -563,7 +563,7 @@ function OrderCard({ order, onAssign, onComplete }) {
 
         {/* Footer: total + action buttons */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-slate-100">
-          <span className="text-sm font-bold text-slate-800">Total: ₹{order.totalAmount}</span>
+          <span className="text-sm font-bold text-slate-800">Total: ₹{parseFloat(order.totalAmount).toFixed(2)}</span>
 
           <div className="flex gap-2 flex-wrap">
             {!isCancelled && order.status !== "Completed" && (
