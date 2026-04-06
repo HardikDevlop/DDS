@@ -3,6 +3,7 @@ import { CartContext } from "../context/CartContext";
 import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { ErrorToast } from "../Components/ErrorToast";
 import {
   FiTrash2, FiX, FiCheck, FiClock, FiMapPin,
   FiHome, FiCalendar, FiChevronLeft, FiChevronRight,
@@ -548,6 +549,7 @@ export default function Cart() {
   const [selectedDate, setSelectedDate]   = useState(new Date());
   const [selectedTime, setSelectedTime]   = useState(null);
   const [errors, setErrors]               = useState({});
+  const [error, setError]                 = useState(null);
   const [productSubs, setProductSubs]     = useState({});
   const [selectedTip, setSelectedTip]     = useState(null);
   const [customTip, setCustomTip]         = useState(0);
@@ -584,7 +586,10 @@ export default function Cart() {
         try {
           const res = await axios.get(`${BASE_URL}/api/products/${item.id}`);
           r[item.id] = Array.isArray(res.data?.subServices) ? res.data.subServices : [];
-        } catch { r[item.id] = []; }
+        } catch { 
+          r[item.id] = []; 
+          setError("Failed to load some service details.");
+        }
       }
       setProductSubs(r);
     }
@@ -597,7 +602,10 @@ export default function Cart() {
     try {
       const res = await axios.get(`${BASE_URL}/api/users/addresses`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
       setSavedAddresses(Array.isArray(res.data) ? res.data : []);
-    } catch { setSavedAddresses([]); }
+    } catch { 
+      setSavedAddresses([]); 
+      setError("Failed to load saved addresses.");
+    }
   };
 
   /* sync address fields when saved addr selected */
@@ -1107,6 +1115,7 @@ export default function Cart() {
           <span style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{toastMsg}</span>
         </div>
       )}
+      {error && <ErrorToast message={error} onClose={() => setError(null)} />}
     </div>
   );
 }

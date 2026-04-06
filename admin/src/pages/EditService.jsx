@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { PageLayout, PageSkeletonForm } from "../Components/PageLayout";
+import { ErrorModal } from "../Components/ErrorModal";
 import { FiEdit2 } from "react-icons/fi";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -10,6 +11,8 @@ export default function EditService() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -40,7 +43,14 @@ export default function EditService() {
           : [{ name: "", price: "" }];
         setSubServices(subs);
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.error("Error loading product:", err);
+        setError({
+          title: "Failed to Load Service",
+          message: "Could not load service details. Please try again.",
+          retry: () => window.location.reload(),
+        });
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -78,26 +88,42 @@ export default function EditService() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    Object.entries(form).forEach(([key, value]) => {
-      if (key === "images") {
-        value.forEach((file) => formData.append("images", file));
-      } else {
-        formData.append(key, value);
-      }
-    });
-    formData.append("subServices", JSON.stringify(subServices));
-    formData.append("existingImages", JSON.stringify(existingImages));
-
+    setIsSubmitting(true);
+    setError(null);
+    
     try {
-      await axios.put(`${BASE_URL}/api/products/${id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      if (!form.name.trim()) {
+        throw new Error("Service name is required");
+      }
+
+      const formData = new FormData();
+      Object.entries(form).forEach(([key, value]) => {
+        if (key === "images") {
+          value.forEach((file) => formData.append("images", file));
+        } else {
+          formData.append(key, value);
+        }
       });
+      formData.append("subServices", JSON.stringify(subServices));
+      formData.append("existingImages", JSON.stringify(existingImages));
+
+      await axios.put(`${BASE_URL}/api/products/${id}`, formData);
       alert("Product updated successfully!");
       navigate("/orders");
     } catch (err) {
       console.error("Update failed:", err);
-      alert("Failed to update product");
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to update product. Please try again.";
+      setError({
+        title: "Error Updating Service",
+        message: errorMsg,
+        retry: () => handleSubmit(e),
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -243,13 +269,26 @@ export default function EditService() {
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-teal-600 text-white font-medium hover:bg-teal-700 transition-colors"
+                disabled={isSubmitting}
+                className={`w-full py-3 rounded-xl font-medium transition-colors ${
+                  isSubmitting
+                    ? "bg-slate-400 text-white cursor-not-allowed"
+                    : "bg-teal-600 text-white hover:bg-teal-700"
+                }`}
               >
-                Update Product
+                {isSubmitting ? "Updating & Uploading..." : "Update Product"}
               </button>
             </form>
           </div>
         </div>
+      )}
+      {error && (
+        <ErrorModal
+          title={error.title}
+          message={error.message}
+          onClose={() => setError(null)}
+          onRetry={error.retry}
+        />
       )}
     </PageLayout>
   );

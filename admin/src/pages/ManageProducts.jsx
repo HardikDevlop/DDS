@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { PageLayout, PageSkeletonHeader, PageSkeletonCards } from "../Components/PageLayout";
+import { ErrorModal } from "../Components/ErrorModal";
 import { FiPackage, FiPlusCircle, FiEdit2, FiTrash2, FiChevronDown, FiChevronUp } from "react-icons/fi";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -24,6 +25,8 @@ function EditProductModal({ product, onClose, onSave }) {
         }))
       : [{ name: "", price: "", existingImage: null, image: null, imagePreview: null }]
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -86,30 +89,46 @@ function EditProductModal({ product, onClose, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("name", form.name);
-    formData.append("visitingPrice", form.visitingPrice);
-    form.images.forEach((file) => formData.append("images", file));
-    formData.append("existingImages", JSON.stringify(existingImages || []));
-    const subServicesData = subServices.map((sub) => ({
-      name: sub.name,
-      price: sub.price,
-      image: sub.image ? sub.image.name : sub.existingImage || null,
-    }));
-    formData.append("subServices", JSON.stringify(subServicesData));
-    subServices.forEach((sub) => {
-      if (sub.image && sub.image instanceof File) formData.append("subServiceImages", sub.image);
-    });
-
+    setIsSubmitting(true);
+    setError(null);
+    
     try {
-      await axios.put(`${BASE_URL}/api/products/${product._id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      if (!form.name.trim()) {
+        throw new Error("Service name is required");
+      }
+
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("visitingPrice", form.visitingPrice);
+      form.images.forEach((file) => formData.append("images", file));
+      formData.append("existingImages", JSON.stringify(existingImages || []));
+      const subServicesData = subServices.map((sub) => ({
+        name: sub.name,
+        price: sub.price,
+        image: sub.image ? sub.image.name : sub.existingImage || null,
+      }));
+      formData.append("subServices", JSON.stringify(subServicesData));
+      subServices.forEach((sub) => {
+        if (sub.image && sub.image instanceof File) formData.append("subServiceImages", sub.image);
       });
+
+      await axios.put(`${BASE_URL}/api/products/${product._id}`, formData);
       alert("Product updated!");
       onSave();
     } catch (err) {
       console.error("Failed to update product:", err);
-      alert(err.response?.data?.message || "Failed to update product");
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to update product. Please try again.";
+      setError({
+        title: "Error Updating Service",
+        message: errorMsg,
+        retry: () => handleSubmit(e),
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -272,20 +291,38 @@ function EditProductModal({ product, onClose, onSave }) {
           <div className="flex flex-wrap items-center gap-2 pt-2">
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 transition-colors"
+              disabled={isSubmitting}
+              className={`px-4 py-2 rounded-xl text-white text-sm font-medium transition-colors ${
+                isSubmitting
+                  ? "bg-slate-400 cursor-not-allowed"
+                  : "bg-teal-600 hover:bg-teal-700"
+              }`}
             >
-              Save Changes
+              {isSubmitting ? "Uploading..." : "Save Changes"}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
+              disabled={isSubmitting}
+              className={`px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium transition-colors ${
+                isSubmitting
+                  ? "cursor-not-allowed bg-slate-50 text-slate-400 border-slate-300"
+                  : "text-slate-700 hover:bg-slate-50"
+              }`}
             >
-              Cancel
+              {isSubmitting ? "Uploading..." : "Cancel"}
             </button>
           </div>
         </form>
       </div>
+      {error && (
+        <ErrorModal
+          title={error.title}
+          message={error.message}
+          onClose={() => setError(null)}
+          onRetry={error.retry}
+        />
+      )}
     </div>
   );
 }
@@ -295,6 +332,7 @@ export default function ManageProducts() {
   const [isLoading, setIsLoading] = useState(true);
   const [expanded, setExpanded] = useState({});
   const [editing, setEditing] = useState(null);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const fetchProducts = () => {
@@ -305,7 +343,15 @@ export default function ManageProducts() {
         setProducts(res.data);
         setIsLoading(false);
       })
-      .catch(() => setIsLoading(false));
+      .catch((err) => {
+        console.error("Error fetching products:", err);
+        setError({
+          title: "Failed to Load Services",
+          message: "Could not load services. Please try refreshing the page.",
+          retry: fetchProducts,
+        });
+        setIsLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -314,8 +360,19 @@ export default function ManageProducts() {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this service?")) {
-      await axios.delete(`${BASE_URL}/api/products/${id}`);
-      setProducts(products.filter((p) => p._id !== id));
+      try {
+        await axios.delete(`${BASE_URL}/api/products/${id}`);
+        setProducts(products.filter((p) => p._id !== id));
+        alert("Service deleted successfully!");
+      } catch (err) {
+        console.error("Failed to delete:", err);
+        const errorMsg = err.response?.data?.message || err.message || "Failed to delete service";
+        setError({
+          title: "Error Deleting Service",
+          message: errorMsg,
+          retry: () => handleDelete(id),
+        });
+      }
     }
   };
 
@@ -442,6 +499,14 @@ export default function ManageProducts() {
             setEditing(null);
             fetchProducts();
           }}
+        />
+      )}
+      {error && (
+        <ErrorModal
+          title={error.title}
+          message={error.message}
+          onClose={() => setError(null)}
+          onRetry={error.retry}
         />
       )}
     </PageLayout>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { PageLayout } from "../Components/PageLayout";
+import { ErrorModal } from "../Components/ErrorModal";
 import { FiPlusCircle } from "react-icons/fi";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -15,6 +16,9 @@ export default function AddService() {
   const [subServices, setSubServices] = useState([
     { name: "", price: "", image: null, imagePreview: null },
   ]);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -69,35 +73,55 @@ export default function AddService() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("name", form.name);
-    formData.append("visitingPrice", form.visitingPrice);
-    form.images.forEach((file) => formData.append("images", file));
-    const subServicesData = subServices.map((sub) => ({
-      name: sub.name,
-      price: sub.price,
-      image: sub.image ? sub.image.name : null,
-    }));
-    formData.append("subServices", JSON.stringify(subServicesData));
-    subServices.forEach((sub) => {
-      if (sub.image) formData.append("subServiceImages", sub.image);
-    });
-
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      await axios.post(`${BASE_URL}/api/products`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      // Validate required fields
+      if (!form.name.trim()) {
+        throw new Error("Service name is required");
+      }
+      if (!form.visitingPrice || isNaN(form.visitingPrice)) {
+        throw new Error("Valid visiting price is required");
+      }
+      if (form.images.length === 0) {
+        throw new Error("At least one image is required");
+      }
+
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("visitingPrice", form.visitingPrice);
+      form.images.forEach((file) => formData.append("images", file));
+      const subServicesData = subServices
+        .filter(sub => sub.name.trim()) // Only include non-empty sub-services
+        .map((sub) => ({
+          name: sub.name,
+          price: sub.price,
+          image: sub.image ? sub.image.name : null,
+        }));
+      formData.append("subServices", JSON.stringify(subServicesData));
+      subServices.forEach((sub) => {
+        if (sub.image) formData.append("subServiceImages", sub.image);
       });
+
+      await axios.post(`${BASE_URL}/api/products`, formData);
       alert("Service added successfully!");
       setForm({ name: "", visitingPrice: "", images: [] });
       setSubServices([{ name: "", price: "", image: null, imagePreview: null }]);
     } catch (err) {
       console.error("Failed to add service:", err);
-      const msg =
+      const errorMsg =
         err.response?.data?.message ||
         err.response?.data?.error ||
         err.message ||
-        "Unknown error";
-      alert(`Failed to add service: ${msg}`);
+        "Failed to add service. Please try again.";
+      setError({
+        title: "Error Adding Service",
+        message: errorMsg,
+        retry: () => handleSubmit(e),
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -262,14 +286,27 @@ export default function AddService() {
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full py-3 px-6 rounded-xl bg-teal-600 text-white font-medium hover:bg-teal-700 transition-colors shadow-dashboard-card"
+                disabled={isLoading}
+                className={`w-full py-3 px-6 rounded-xl font-medium transition-colors shadow-dashboard-card ${
+                  isLoading
+                    ? "bg-slate-400 text-white cursor-not-allowed"
+                    : "bg-teal-600 text-white hover:bg-teal-700"
+                }`}
               >
-                Publish Service
+                {isLoading ? "Uploading & Publishing..." : "Publish Service"}
               </button>
             </div>
           </form>
         </div>
       </div>
+      {error && (
+        <ErrorModal
+          title={error.title}
+          message={error.message}
+          onClose={() => setError(null)}
+          onRetry={error.retry}
+        />
+      )}
     </PageLayout>
   );
 }

@@ -8,8 +8,7 @@ import {
   FaWhatsapp, FaFacebookF, FaInstagram,
   FaTwitter, FaYoutube, FaLinkedinIn,
 } from "react-icons/fa";
-import axios from "axios";
-import GlassCard from "../Components/GlassCard";
+import axios from "axios";import { ErrorToast } from "../Components/ErrorToast";import GlassCard from "../Components/GlassCard";
 import QuoteForm from "../Components/QuoteForm";
 import CTASection from "../Components/CTASection";
 
@@ -172,14 +171,23 @@ export default function Home() {
   const emailAddress = "admin@ddsonline.in";
 
   useEffect(() => {
-    axios
-      .get(`${BASE_URL}/api/products`)
-      .then((res) => setProducts(Array.isArray(res.data) ? res.data : []))
-      .catch((err) => {
-        console.error("Error fetching products:", err);
-        setError("Failed to load services. Please try again later.");
-      })
-      .finally(() => setIsLoading(false));
+    const fetchProducts = () => {
+      axios
+        .get(`${BASE_URL}/api/products`)
+        .then((res) => setProducts(Array.isArray(res.data) ? res.data : []))
+        .catch((err) => {
+          console.error("Error fetching products:", err);
+          setError("Failed to load services. Please refresh the page.");
+        })
+        .finally(() => setIsLoading(false));
+    };
+
+    // Fetch immediately on mount
+    fetchProducts();
+
+    // Refetch every 60 seconds to catch new products
+    const interval = setInterval(fetchProducts, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const topServices = products.slice(0, 6);
@@ -542,6 +550,7 @@ export default function Home() {
         </div> */}
 
       </div>
+      {error && <ErrorToast message={error} onClose={() => setError(null)} />}
      </GlassCard>
   );
 }

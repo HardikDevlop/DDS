@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { ErrorToast } from "../Components/ErrorToast";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -146,17 +147,26 @@ export default function ProductList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios
-      .get(`${BASE_URL}/api/products`)
-      .then((res) => {
-        const data = Array.isArray(res.data) ? res.data : [];
-        setProducts(data.map((p) => ({ ...p, _category: inferCategory(p.name) })));
-      })
-      .catch((err) => {
-        console.error("Error fetching products:", err);
-        setError("Failed to load services. Please try again later.");
-      })
-      .finally(() => setIsLoading(false));
+    const fetchProducts = () => {
+      axios
+        .get(`${BASE_URL}/api/products`)
+        .then((res) => {
+          const data = Array.isArray(res.data) ? res.data : [];
+          setProducts(data.map((p) => ({ ...p, _category: inferCategory(p.name) })));
+        })
+        .catch((err) => {
+          console.error("Error fetching products:", err);
+          setError("Failed to load services. Please try again later.");
+        })
+        .finally(() => setIsLoading(false));
+    };
+
+    // Fetch immediately on mount
+    fetchProducts();
+
+    // Refetch every 60 seconds to catch new products
+    const interval = setInterval(fetchProducts, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const filtered = useMemo(() => {
@@ -235,15 +245,7 @@ export default function ProductList() {
         </div>
 
         {/* ── Error ── */}
-        {error && (
-          <div style={{
-            background: T.red50, border: `1px solid ${T.red200}`,
-            borderRadius: 10, padding: "10px 16px",
-            fontSize: 13, color: T.red700, marginBottom: 20,
-          }}>
-            {error}
-          </div>
-        )}
+        {error && <ErrorToast message={error} onClose={() => setError(null)} />}
 
         {/* ── Results count ── */}
         {!isLoading && !error && (

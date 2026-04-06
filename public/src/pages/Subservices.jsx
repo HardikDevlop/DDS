@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState, useContext, useRef } from "react";
 import axios from "axios";
 import { CartContext } from "../context/CartContext";
+import { ErrorToast } from "../Components/ErrorToast";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -134,14 +135,23 @@ export default function Subservices() {
       .then((res) => { setProduct(res.data); setIsLoading(false); })
       .catch(() => { setError("Failed to load subservices."); setIsLoading(false); });
 
-    axios.get(`${BASE_URL}/api/products`).then(res => {
-      const allSubs = res.data
-        .filter(p => p._id !== id)
-        .flatMap(p => (p.subServices || []).map(sub => ({
-          ...sub, parentProductId: p._id, parentProductName: p.name,
-        })));
-      setSuggestions(allSubs);
-    });
+    const fetchSuggestions = () => {
+      axios.get(`${BASE_URL}/api/products`).then(res => {
+        const allSubs = res.data
+          .filter(p => p._id !== id)
+          .flatMap(p => (p.subServices || []).map(sub => ({
+            ...sub, parentProductId: p._id, parentProductName: p.name,
+          })));
+        setSuggestions(allSubs);
+      });
+    };
+
+    // Fetch immediately
+    fetchSuggestions();
+
+    // Refetch suggestions every 60 seconds
+    const interval = setInterval(fetchSuggestions, 60000);
+    return () => clearInterval(interval);
   }, [id]);
 
   useEffect(() => {

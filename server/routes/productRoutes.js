@@ -25,6 +25,10 @@ cloudinary.v2.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  console.error("[Cloudinary] Missing Cloudinary environment variables. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET.");
+}
+
 // Use memory storage for multer
 const storage = multer.memoryStorage();
 
@@ -65,35 +69,42 @@ const uploadFields = upload.fields([
 const uploadToCloudinary = (buffer, folder) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.v2.uploader.upload_stream(
-      { folder },
+      { folder, resource_type: "image" },
       (error, result) => {
-        if (error) reject(error);
-        else resolve(result.secure_url);
+        if (error) {
+          console.error("[Cloudinary] upload error details:", {
+            message: error.message,
+            name: error.name,
+            http_code: error.http_code,
+            details: error.error,
+          });
+          reject(error);
+        } else {
+          resolve(result.secure_url);
+        }
       }
     );
     stream.end(buffer);
   });
 };
 
+const uploadMultipleToCloudinary = (files, folder) => {
+  return Promise.all(
+    files.map((file) => uploadToCloudinary(file.buffer, folder))
+  );
+};
+
 router.post("/", uploadFields, handleMulterError, async (req, res, next) => {
   try {
-    // Upload main images to Cloudinary
-    const mainImageUrls = [];
-    if (req.files && req.files.images) {
-      for (const file of req.files.images) {
-        const url = await uploadToCloudinary(file.buffer, "products/main");
-        mainImageUrls.push(url);
-      }
-    }
+    // Upload all main images in parallel to Cloudinary
+    const mainImageUrls = req.files && req.files.images
+      ? await uploadMultipleToCloudinary(req.files.images, "products/main")
+      : [];
 
-    // Upload sub-service images to Cloudinary
-    const subServiceImageUrls = [];
-    if (req.files && req.files.subServiceImages) {
-      for (const file of req.files.subServiceImages) {
-        const url = await uploadToCloudinary(file.buffer, "products/subservices");
-        subServiceImageUrls.push(url);
-      }
-    }
+    // Upload all sub-service images in parallel to Cloudinary
+    const subServiceImageUrls = req.files && req.files.subServiceImages
+      ? await uploadMultipleToCloudinary(req.files.subServiceImages, "products/subservices")
+      : [];
 
     // Attach URLs to req
     req.cloudinaryUrls = {
@@ -104,29 +115,25 @@ router.post("/", uploadFields, handleMulterError, async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Cloudinary upload error:", error);
-    return res.status(500).json({ message: "Image upload failed", error: error.message });
+    return res.status(500).json({
+      message: "Image upload failed",
+      error: error.message,
+      cloudinary: error.error ? error.error.message : undefined,
+    });
   }
 }, createProduct);
 
 router.put("/:id", uploadFields, handleMulterError, async (req, res, next) => {
   try {
-    // Upload new main images to Cloudinary
-    const newMainImageUrls = [];
-    if (req.files && req.files.images) {
-      for (const file of req.files.images) {
-        const url = await uploadToCloudinary(file.buffer, "products/main");
-        newMainImageUrls.push(url);
-      }
-    }
+    // Upload all new main images in parallel to Cloudinary
+    const newMainImageUrls = req.files && req.files.images
+      ? await uploadMultipleToCloudinary(req.files.images, "products/main")
+      : [];
 
-    // Upload new sub-service images to Cloudinary
-    const newSubServiceImageUrls = [];
-    if (req.files && req.files.subServiceImages) {
-      for (const file of req.files.subServiceImages) {
-        const url = await uploadToCloudinary(file.buffer, "products/subservices");
-        newSubServiceImageUrls.push(url);
-      }
-    }
+    // Upload all new sub-service images in parallel to Cloudinary
+    const newSubServiceImageUrls = req.files && req.files.subServiceImages
+      ? await uploadMultipleToCloudinary(req.files.subServiceImages, "products/subservices")
+      : [];
 
     // Attach URLs to req
     req.cloudinaryUrls = {
@@ -137,7 +144,11 @@ router.put("/:id", uploadFields, handleMulterError, async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Cloudinary upload error:", error);
-    return res.status(500).json({ message: "Image upload failed", error: error.message });
+    return res.status(500).json({
+      message: "Image upload failed",
+      error: error.message,
+      cloudinary: error.error ? error.error.message : undefined,
+    });
   }
 }, updateProduct);
 

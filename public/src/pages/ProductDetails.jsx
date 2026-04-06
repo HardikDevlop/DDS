@@ -3,6 +3,7 @@ import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { CartContext } from "../context/CartContext";
 import { AuthContext } from "../context/AuthContext";
+import { ErrorToast } from "../Components/ErrorToast";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -200,6 +201,7 @@ export default function ProductDetails() {
 
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showAddedCard, setShowAddedCard] = useState(false);
   const [showAlreadyInCart, setShowAlreadyInCart] = useState(false);
   const [mainImage, setMainImage] = useState(0);
@@ -214,7 +216,10 @@ export default function ProductDetails() {
         setTotalPrice(res.data.visitingPrice);
         setIsLoading(false);
       })
-      .catch(() => setIsLoading(false));
+      .catch(() => {
+        setError("Failed to load product details. Please try again.");
+        setIsLoading(false);
+      });
   }, [id]);
 
   useEffect(() => {
@@ -585,6 +590,7 @@ export default function ProductDetails() {
           </div>
         </div>
       )}
+      {error && <ErrorToast message={error} onClose={() => setError(null)} />}
     </div>
   );
 }
