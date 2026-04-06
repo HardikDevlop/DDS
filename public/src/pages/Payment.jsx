@@ -1,8 +1,8 @@
 import { useState, useContext, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import { CartContext } from "../context/CartContext";
+import API from "../utils/axiosInstance";
 
 // Dynamically load Razorpay script
 const loadRazorpayScript = () => {
@@ -262,30 +262,28 @@ export default function Payment() {
 
   const handlePayment = async () => {
     if (selectedMethod === "razorpay" || selectedMethod === "pre") {
-      // Load Razorpay script before using it
       const isLoaded = await loadRazorpayScript();
       if (!isLoaded) {
         alert("Failed to load payment gateway. Please try again.");
         return;
       }
-      
-      const { data: rzpOrder } = await axios.post(
-        "/api/payment/create-order",
-        { amount: orderDetails.total * 100 }
-      );
+
+      const { data: rzpOrder } = await API.post("/payment/create-order", {
+        amount: Math.round(Number(orderDetails.total || 0) * 100),
+      });
+
       const options = {
-        key: "rzp_test_XXXXXXXXXXXXXX",
+        key: rzpOrder.key,
         amount: rzpOrder.amount,
         currency: "INR",
         name: "DDS Services",
         description: "Service Payment",
         order_id: rzpOrder.id,
         handler: async (response) => {
-          await axios.post(
-            "/api/orders/place",
-            { ...orderDetails, paymentId: response.razorpay_payment_id },
-            { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-          );
+          await API.post("/orders/place", {
+            ...orderDetails,
+            paymentId: response.razorpay_payment_id,
+          });
           clearCart();
           navigate("/my-orders");
         },
@@ -300,16 +298,12 @@ export default function Payment() {
     } else if (selectedMethod === "gpay" || selectedMethod === "phonepe") {
       alert("Show UPI QR or intent for " + selectedMethod);
     } else if (selectedMethod === "post") {
-      await axios.post(
-        "/api/orders/place",
-        {
-          items: orderDetails.items,
-          totalAmount: orderDetails.total,
-          address: orderDetails.address,
-          paymentType: "post",
-        },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
+      await API.post("/orders/place", {
+        items: orderDetails.items,
+        totalAmount: orderDetails.total,
+        address: orderDetails.address,
+        paymentType: "post",
+      });
       clearCart();
       navigate("/my-orders");
     }
@@ -330,13 +324,13 @@ export default function Payment() {
       <style>{CSS}</style>
 
       {/* ── Page title ─────────────────────────────────────────── */}
-      {/* <div className="page-title-wrap">
+       <div className="page-title-wrap">
         <div className="page-badge">
           <FiCheck size={12} /> Order Confirmed
         </div>
         <h1 className="page-title">Complete Your Payment</h1>
         <p className="page-sub">Review your order details and choose how to pay</p>
-      </div> */}
+      </div>
 
       {/* ── Two-column grid ──────────────────────────────────────── */}
       <div className="pay-wrap">
