@@ -1,5 +1,5 @@
 import express from "express";
-import { razorpay } from "../utils/razorpay.js";
+import { getRazorpayClient } from "../utils/razorpay.js";
 import { config } from "../config/keys.js";
 
 const router = express.Router();
@@ -17,6 +17,7 @@ router.post("/create-order", async (req, res) => {
       receipt: `receipt_order_${Date.now()}`,
     };
 
+    const razorpay = getRazorpayClient();
     const order = await razorpay.orders.create(options);
     res.json({
       ...order,
@@ -24,7 +25,11 @@ router.post("/create-order", async (req, res) => {
     });
   } catch (err) {
     console.error("Razorpay Error:", err);
-    res.status(500).json({ error: "Failed to create order" });
+    const message =
+      err.message === "Razorpay credentials are missing"
+        ? "Payment gateway is not configured on the server"
+        : "Failed to create order";
+    res.status(500).json({ error: message });
   }
 });
 

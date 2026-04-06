@@ -252,60 +252,76 @@ const CSS = `
 export default function Payment() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user, isAuthenticated } = useContext(AuthContext);
   const { clearCart } = useContext(CartContext);
   const orderDetails = location.state?.orderDetails;
-  const [selectedMethod, setSelectedMethod] = useState("razorpay");
+  const [selectedMethod, setSelectedMethod] = useState("post");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => { if (!orderDetails) navigate("/cart"); }, [orderDetails, navigate]);
   if (!orderDetails) return null;
 
   const handlePayment = async () => {
-    if (selectedMethod === "razorpay" || selectedMethod === "pre") {
-      const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) {
-        alert("Failed to load payment gateway. Please try again.");
-        return;
+    if (!isAuthenticated || !localStorage.getItem("token")) {
+      alert("Please login first to place your order.");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      if (selectedMethod === "razorpay" || selectedMethod === "pre") {
+        const isLoaded = await loadRazorpayScript();
+        if (!isLoaded) {
+          alert("Failed to load payment gateway. Please try again.");
+          return;
+        }
+
+        const { data: rzpOrder } = await API.post("/payment/create-order", {
+          amount: Math.round(Number(orderDetails.total || 0) * 100),
+        });
+
+        const options = {
+          key: rzpOrder.key,
+          amount: rzpOrder.amount,
+          currency: "INR",
+          name: "DDS Services",
+          description: "Service Payment",
+          order_id: rzpOrder.id,
+          handler: async (response) => {
+            await API.post("/orders/place", {
+              ...orderDetails,
+              paymentId: response.razorpay_payment_id,
+            });
+            clearCart();
+            navigate("/my-orders");
+          },
+          prefill: {
+            name: orderDetails.userName,
+            email: orderDetails.userEmail,
+            contact: orderDetails.userPhone,
+          },
+          theme: { color: T.blue },
+        };
+        new window.Razorpay(options).open();
+      } else if (selectedMethod === "gpay" || selectedMethod === "phonepe") {
+        alert("Show UPI QR or intent for " + selectedMethod);
+      } else if (selectedMethod === "post") {
+        await API.post("/orders/place", {
+          items: orderDetails.items,
+          totalAmount: orderDetails.total,
+          address: orderDetails.address,
+          paymentType: "post",
+        });
+        clearCart();
+        navigate("/my-orders");
       }
-
-      const { data: rzpOrder } = await API.post("/payment/create-order", {
-        amount: Math.round(Number(orderDetails.total || 0) * 100),
-      });
-
-      const options = {
-        key: rzpOrder.key,
-        amount: rzpOrder.amount,
-        currency: "INR",
-        name: "DDS Services",
-        description: "Service Payment",
-        order_id: rzpOrder.id,
-        handler: async (response) => {
-          await API.post("/orders/place", {
-            ...orderDetails,
-            paymentId: response.razorpay_payment_id,
-          });
-          clearCart();
-          navigate("/my-orders");
-        },
-        prefill: {
-          name: orderDetails.userName,
-          email: orderDetails.userEmail,
-          contact: orderDetails.userPhone,
-        },
-        theme: { color: T.blue },
-      };
-      new window.Razorpay(options).open();
-    } else if (selectedMethod === "gpay" || selectedMethod === "phonepe") {
-      alert("Show UPI QR or intent for " + selectedMethod);
-    } else if (selectedMethod === "post") {
-      await API.post("/orders/place", {
-        items: orderDetails.items,
-        totalAmount: orderDetails.total,
-        address: orderDetails.address,
-        paymentType: "post",
-      });
-      clearCart();
-      navigate("/my-orders");
+    } catch (err) {
+      console.error("Order placement failed:", err);
+      alert(err.response?.data?.message || err.response?.data?.error || "Order place nahi ho paya. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -477,8 +493,8 @@ export default function Payment() {
             </div>
 
             {/* Desktop pay button */}
-            <button className="pay-btn pay-btn-desktop" onClick={handlePayment}>
-              {btnLabel[selectedMethod] || "Pay Now"}
+            <button className="pay-btn pay-btn-desktop" onClick={handlePayment} disabled={isSubmitting}>
+              {isSubmitting ? "Please wait..." : (btnLabel[selectedMethod] || "Pay Now")}
               <FiChevronRight size={16} />
             </button>
 
@@ -504,8 +520,8 @@ export default function Payment() {
 
       {/* ══ Mobile sticky pay button ══ */}
       <div className="pay-btn-mobile-wrap">
-        <button className="pay-btn" onClick={handlePayment}>
-          {btnLabel[selectedMethod] || "Pay Now"}
+        <button className="pay-btn" onClick={handlePayment} disabled={isSubmitting}>
+          {isSubmitting ? "Please wait..." : (btnLabel[selectedMethod] || "Pay Now")}
           <FiChevronRight size={16} />
         </button>
       </div>

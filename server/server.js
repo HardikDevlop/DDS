@@ -23,31 +23,47 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// For ES modules __dirname workaround
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ CORS allowed origins - use actual domain/subdomain names
-const allowedOrigins = [
-  // 'http://localhost:5173',
-  // 'http://localhost:5174',
-  'https://admindharm.ddsonline.in/',
-  'https://admindharm.ddsonline.in',
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
   'https://ddsonline.in',
-  // 'http://localhost:5175',
+  'https://admindharm.ddsonline.in',
+  'https://admindds.ddsonline.in',
+  'https://callcentrepanel.ddsonline.in',
   'https://admin-mmo0.onrender.com',
   'https://provider-snbb.onrender.com',
-  // 'https://client-d5uz.onrender.com',
-  // 'https://daksh-client.onrender.com',
-  // 'https://daksh-admin.onrender.com',
-  // 'https://admindds.ddsonline.in',
-  // 'https://callcentrepanel.ddsonline.in',
-];
+  'https://client-d5uz.onrender.com',
+  'https://daksh-client.onrender.com',
+  'https://daksh-admin.onrender.com',
+]);
 
-// ✅ CORS middleware
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+
+  const normalizedOrigin = origin.replace(/\/$/, '');
+  if (allowedOrigins.has(normalizedOrigin)) {
+    return true;
+  }
+
+  try {
+    const { hostname, protocol } = new URL(normalizedOrigin);
+    if (protocol !== 'https:' && hostname !== 'localhost') {
+      return false;
+    }
+
+    return hostname === 'ddsonline.in' || hostname.endsWith('.ddsonline.in') || hostname === 'localhost';
+  } catch {
+    return false;
+  }
+};
+
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (isAllowedOrigin(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS: " + origin));
@@ -56,17 +72,13 @@ app.use(cors({
   credentials: true,
 }));
 
-// ✅ Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Connect DB
 connectDB();
 
-// ✅ Static upload path
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ✅ Routes
 app.use("/api/admin", adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -80,14 +92,10 @@ app.use('/api/tickets', ticketRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/quotes", quoteRoutes);
 
-// ✅ Default API check
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
-// ✅ Start server
-// On platforms like Render, you must listen on the PORT they provide
-// and bind to 0.0.0.0 (default when hostname is omitted).
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
