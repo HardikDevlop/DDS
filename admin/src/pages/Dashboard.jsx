@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import StatsChart from "../Components/StatsChart";
 import OrdersDoughnutChart from "../Components/OrdersDoughnutChart";
+import { ErrorModal } from "../Components/ErrorModal";
 import {
-  FiTool,
+  FiTool, 
   FiUsers,
   FiPackage,
   FiCalendar,
@@ -44,6 +45,57 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activeChart, setActiveChart] = useState("annual");
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [showExpiryAlert, setShowExpiryAlert] = useState(false);
+
+  // Play siren sound when alert is shown
+  useEffect(() => {
+    if (showExpiryAlert) {
+      playSirenSound();
+    }
+  }, [showExpiryAlert]);
+
+  // Function to play siren sound
+  const playSirenSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // Create a siren-like sound by modulating frequency
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.linearRampToValueAtTime(1200, audioContext.currentTime + 0.5);
+      oscillator.frequency.linearRampToValueAtTime(800, audioContext.currentTime + 1.0);
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.0);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 1.0);
+    } catch (error) {
+      console.log('Audio not supported or blocked');
+    }
+  };
+
+  // Check if services expiry alert should be shown
+  useEffect(() => {
+    const checkExpiryAlert = () => {
+      const today = new Date();
+      const expiryStartDate = new Date(2026, 4, 19); // May 19, 2026
+      const expiryEndDate = new Date(2026, 4, 25); // May 25, 2026
+
+      // Show alert every day from May 19 to May 25, 2026
+      if (today >= expiryStartDate && today <= expiryEndDate) {
+        setShowExpiryAlert(true);
+      } else {
+        setShowExpiryAlert(false);
+      }
+    };
+
+    checkExpiryAlert();
+  }, []);
 
   const fetchStats = async () => {
     try {
@@ -64,6 +116,17 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen dashboard-bg-pattern">
+      {/* Services Expiry Alert */}
+      {showExpiryAlert && (
+        <ErrorModal
+          isOpen={showExpiryAlert}
+          title="🚨 URGENT: Services Expiry Alert"
+          message="⚠️ CRITICAL NOTICE: Your services will expire on May 25, 2026. Please renew immediately to avoid service interruption. This alert will continue daily until renewal."
+          onClose={() => setShowExpiryAlert(false)}
+          isDanger={true}
+        />
+      )}
+      
       <main className="lg:ml-64 pt-16 md:pt-8 pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}

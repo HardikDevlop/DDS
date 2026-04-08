@@ -549,7 +549,7 @@ function OrderCard({ order, onAssign, onComplete }) {
                 src={`${BASE_URL}/uploads/${item.imageUrl}`}
                 alt={item.title}
                 className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-lg shrink-0"
-                onError={(e) => { e.target.src = "https://via.placeholder.com/48?text=?"; }}
+                onError={(e) => { e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iMjQiIHk9IjI0IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPj88L3RleHQ+PC9zdmc+"; }}
               />
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-sm truncate text-slate-800">{item.title}</p>

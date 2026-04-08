@@ -417,6 +417,9 @@ const CSS = `
   .date-btn:hover:not(.active) { border-color: ${T.blue}; color: ${T.blue}; }
 
   .time-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  @media (max-width: 480px) {
+    .time-grid { grid-template-columns: repeat(3, 1fr); }
+  }
   .time-btn {
     padding: 8px 4px; border-radius: 8px; border: 1px solid ${T.border};
     background: ${T.bgSoft}; color: ${T.textMid};
@@ -496,10 +499,10 @@ const CSS = `
     background: ${T.bgWhite}; border-top: 1px solid ${T.border};
     padding: 12px 16px;
     box-shadow: 0 -4px 20px ${T.shadowSm};
-    z-index: 40;
+    z-index: 1000;
   }
-  @media (max-width: 960px) {
-    .mobile-checkout-bar { display: block; }
+  @media (max-width: 768px) {
+    .mobile-checkout-bar { display: block !important; }
     .desktop-checkout { display: none !important; }
     .cart-page { padding-bottom: 100px; }
   }
@@ -597,10 +600,15 @@ export default function Cart() {
   }, [cartItems]);
 
   /* saved addresses */
-  useEffect(() => { if (showModal) fetchSaved(); }, [showModal]);
+  useEffect(() => { if (showModal && isAuthenticated) fetchSaved(); }, [showModal, isAuthenticated]);
   const fetchSaved = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setSavedAddresses([]);
+      return;
+    }
     try {
-      const res = await axios.get(`${BASE_URL}/api/users/addresses`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+      const res = await axios.get(`${BASE_URL}/api/users/addresses`, { headers: { Authorization: `Bearer ${token}` } });
       setSavedAddresses(Array.isArray(res.data) ? res.data : []);
     } catch { 
       setSavedAddresses([]); 
@@ -721,13 +729,13 @@ export default function Cart() {
                 const itemTotal = Number(item.price) + subTotal;
                 const imgSrc = item.imageUrl
                   ? (item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}/uploads/${item.imageUrl}`)
-                  : (Array.isArray(item.images) && item.images[0] ? (item.images[0].startsWith('http') ? item.images[0] : `${BASE_URL}/uploads/${item.images[0]}`) : "/default-service.png");
+                  : (Array.isArray(item.images) && item.images[0] ? (item.images[0].startsWith('http') ? item.images[0] : `${BASE_URL}/uploads/${item.images[0]}`) : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjY0IiB5PSI2NCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TZXJ2aWNlPC90ZXh0Pjwvc3ZnPg==");
 
                 return (
                   <div className="item-wrap" key={item.id || idx}>
                     <div className="item-inner">
                       <img src={imgSrc} alt={item.title} className="item-img"
-                        onError={e => { e.target.src = "/default-service.png"; }} />
+                        onError={e => { e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjY0IiB5PSI2NCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TZXJ2aWNlPC90ZXh0Pjwvc3ZnPg=="; }} />
 
                       <div className="item-body">
                         <p className="item-title">{safeText(item.title) || safeText(item.name)}</p>
@@ -739,9 +747,9 @@ export default function Cart() {
                             {subs.map((sub, si) => (
                               <div className="sub-chip" key={sub._id || sub.name || si}>
                                 <img
-                                  src={sub.image ? (sub.image.startsWith('http') ? sub.image : `${BASE_URL}/uploads/${sub.image}`) : "/default-service.png"}
+                                  src={sub.image ? (sub.image.startsWith('http') ? sub.image : `${BASE_URL}/uploads/${sub.image}`) : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzQiIGhlaWdodD0iMzQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjM0IiBoZWlnaHQ9IjM0IiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iMTciIHk9IjE3IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iOCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UzwvdGV4dD48L3N2Zz4="}
                                   alt={sub.name} className="sub-chip-img"
-                                  onError={e => { e.target.src = "/default-service.png"; }}
+                                  onError={e => { e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzQiIGhlaWdodD0iMzQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjM0IiBoZWlnaHQ9IjM0IiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iMTciIHk9IjE3IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iOCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UzwvdGV4dD48L3N2Zz4="; }}
                                 />
                                 <div>
                                   <p style={{ fontSize: 12, fontWeight: 600, color: T.text }}>{sub.name || sub.title}</p>
@@ -874,10 +882,10 @@ export default function Cart() {
                             onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
                           >
                             <img
-                              src={sub.image ? (sub.image.startsWith('http') ? sub.image : `${BASE_URL}/uploads/${sub.image}`) : "/default-service.png"}
+                              src={sub.image ? (sub.image.startsWith('http') ? sub.image : `${BASE_URL}/uploads/${sub.image}`) : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwIiBoZWlnaHQ9IjkwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxNjAiIGhlaWdodD0iOTAiIGZpbGw9IiNmM2Y0ZjYiLz48dGV4dCB4PSI4MCIgeT0iNDUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+U2VydmljZTwvdGV4dD48L3N2Zz4="}
                               alt={sub.name}
                               style={{ width: "100%", height: 90, objectFit: "cover", display: "block" }}
-                              onError={e => { e.target.src = "/default-service.png"; }}
+                              onError={e => { e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwIiBoZWlnaHQ9IjkwIiB4bWxucz0iaHR0cDovL3d3cy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxNjAiIGhlaWdodD0iOTAiIGZpbGw9IiNmM2Y0ZjYiLz48dGV4dCB4PSI4MCIgeT0iNDUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+U2VydmljZTwvdGV4dD48L3N2Zz4="; }}
                             />
                             <div style={{ padding: "10px 10px 12px" }}>
                               <p style={{ fontSize: 12, fontWeight: 700, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 3 }}>
@@ -989,7 +997,7 @@ export default function Cart() {
       {/* Mobile sticky checkout */}
       <div className="mobile-checkout-bar">
         <button className="checkout-btn" style={{ margin: 0 }} onClick={() => { if (!isAuthenticated) { navigate("/login"); return; } setShowModal(true); }}>
-          <FiCheck size={16} /> Checkout — ₹{total.toFixed(2)}
+          <FiCheck size={16} /> Proceed to Checkout — ₹{total.toFixed(2)}
         </button>
       </div>
 

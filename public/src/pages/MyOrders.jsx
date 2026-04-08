@@ -398,10 +398,10 @@ export default function MyOrders() {
                       return (
                         <div key={idx} className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-5 border rounded-lg p-3 sm:p-4 bg-gray-50 border-gray-200">
                           <img
-                            src={item.imageUrl ? `${BASE_URL}/uploads/${item.imageUrl}` : "https://via.placeholder.com/128x128?text=Service"}
+                            src={item.imageUrl ? `${BASE_URL}/uploads/${item.imageUrl}` : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjY0IiB5PSI2NCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TZXJ2aWNlPC90ZXh0Pjwvc3ZnPg=="}
                             className="w-full h-32 sm:w-32 sm:h-32 object-cover rounded-lg border shadow"
                             alt={item.title}
-                            onError={(e) => { e.target.src = "https://via.placeholder.com/128x128?text=Service"; }}
+                            onError={(e) => { e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjY0IiB5PSI2NCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5TZXJ2aWNlPC90ZXh0Pjwvc3ZnPg=="; }}
                           />
                           <div className="flex flex-col flex-1 justify-between">
                             <div>

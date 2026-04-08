@@ -31,6 +31,12 @@ const CSS = `
   }
   .sub-inner { max-width: 1200px; margin: 0 auto; padding: 36px 20px 80px; }
 
+  @media (max-width: 768px) {
+    .sub-inner { padding: 20px 16px 100px; }
+    .sub-card { min-width: 160px; max-width: 170px; }
+    .sub-card-img { height: 100px; }
+  }
+
   /* cards row */
   .sub-scroll { display: flex; overflow-x: auto; gap: 14px; padding-bottom: 8px; scroll-behavior: smooth; }
   .sub-scroll::-webkit-scrollbar { height: 4px; }
@@ -243,7 +249,7 @@ export default function Subservices() {
                 >
                   <div className="sub-card-img">
                     <img
-                      src={sub.image ? `${BASE_URL}/uploads/${sub.image}` : "/img/default-service.png"}
+                      src={sub.image ? (sub.image.startsWith("http") ? sub.image : `${BASE_URL}/uploads/${sub.image}`) : "/img/default-service.png"}
                       alt={sub.name}
                       onError={e => { e.target.src = "/img/default-service.png"; }}
                     />
@@ -300,7 +306,7 @@ export default function Subservices() {
                     >
                       <div className="sub-card-img">
                         <img
-                          src={sub.image ? `${BASE_URL}/uploads/${sub.image}` : "/img/default-service.png"}
+                          src={sub.image ? (sub.image.startsWith("http") ? sub.image : `${BASE_URL}/uploads/${sub.image}`) : "/img/default-service.png"}
                           alt={sub.name}
                           onError={e => { e.target.src = "/img/default-service.png"; }}
                         />

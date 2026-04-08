@@ -23,7 +23,8 @@ import { FiCheck, FiMapPin, FiClock, FiUser, FiMail, FiShield, FiChevronRight } 
 
 const PAYMENT_METHODS = [
   { key: "razorpay", label: "Razorpay", sub: "Cards, UPI, Netbanking", icon: "/img/razorpay-icon.png", accent: "#2563eb" },
-  { key: "UPI", label: "UPI", sub: "UPI instant transfer", icon: "/img/gpay-icon.png", accent: "#34a853" },
+  // UPI selection is disabled for both web and mobile views.
+  // { key: "UPI", label: "UPI", sub: "UPI instant transfer", icon: "/img/gpay-icon.png", accent: "#34a853" },
   { key: "post", label: "Post Service Payment", sub: "Pay after service done", icon: "/img/cash-icon.png", accent: "#f59e0b" },
 ];
 
@@ -305,8 +306,10 @@ export default function Payment() {
           theme: { color: T.blue },
         };
         new window.Razorpay(options).open();
-      } else if (selectedMethod === "gpay" || selectedMethod === "phonepe") {
-        alert("Show UPI QR or intent for " + selectedMethod);
+      // UPI payment methods are disabled in both web and mobile views.
+      // } else if (selectedMethod === "gpay" || selectedMethod === "phonepe") {
+      //   alert("Show UPI QR or intent for " + selectedMethod);
+      // }
       } else if (selectedMethod === "post") {
         await API.post("/orders/place", {
           items: orderDetails.items,
@@ -327,8 +330,9 @@ export default function Payment() {
 
   const btnLabel = {
     razorpay: "Pay with Razorpay",
-    gpay: "Pay with Google Pay",
-    phonepe: "Pay with PhonePe",
+    // UPI labels are kept commented out because UPI methods are disabled.
+    // gpay: "Pay with Google Pay",
+    // phonepe: "Pay with PhonePe",
     post: "Confirm — Pay After Service",
     pre: "Pay with PayPal",
   };

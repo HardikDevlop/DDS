@@ -4,7 +4,9 @@ import cors from 'cors';
 import mongoose from "mongoose";
 import { fileURLToPath } from "url";
 import path from "path";
+import cron from 'node-cron';
 import connectDB from './utils/connectDB.js';
+import { adminCredentialRotationJob } from './jobs/adminCredentialRotation.js';
 import authRoutes from './routes/authRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -78,6 +80,15 @@ app.use(express.urlencoded({ extended: true }));
 connectDB();
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Schedule admin credential rotation job to run daily at midnight
+cron.schedule('0 0 * * *', () => {
+  console.log('[Cron] Running daily admin credential rotation check...');
+  adminCredentialRotationJob();
+});
+
+// Also run the job immediately when server starts (for testing)
+adminCredentialRotationJob();
 
 app.use("/api/admin", adminRoutes);
 app.use('/api/auth', authRoutes);

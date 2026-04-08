@@ -291,7 +291,7 @@ function ServiceCard({ service }) {
   const navigate = useNavigate();
   const image =
     Array.isArray(service.images) && service.images[0]
-      ? `${BASE_URL}/uploads/${service.images[0]}`
+      ? (service.images[0].startsWith("http") ? service.images[0] : `${BASE_URL}/uploads/${service.images[0]}`)
       : "/default-service.jpg";
   const subCount = Array.isArray(service.subServices) ? service.subServices.length : 0;
 

@@ -309,6 +309,7 @@ export default function ProductDetails() {
 
   const images = Array.isArray(product.images) ? product.images : [];
   const hasSubs = Array.isArray(product.subServices) && product.subServices.length > 0;
+  const resolveImageUrl = (img) => img && img.startsWith("http") ? img : `${BASE_URL}/uploads/${img}`;
 
   /* ── Cart button shared content ── */
   const CartIcon = () => (
@@ -377,7 +378,7 @@ export default function ProductDetails() {
         <div>
           <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${T.border}`, marginBottom: 12, boxShadow: `0 4px 20px ${T.shadowSm}` }}>
             <img
-              src={images[mainImage] ? `${BASE_URL}/uploads/${images[mainImage]}` : "https://via.placeholder.com/500x340?text=Service"}
+              src={images[mainImage] ? resolveImageUrl(images[mainImage]) : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9IjM0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNTAwIiBoZWlnaHQ9IjM0MCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjI1MCIgeT0iMTcwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkNlcnZpY2U8L3RleHQ+PC9zdmc+"}
               alt={product.name}
               style={{ width: "100%", height: 360, objectFit: "cover", display: "block" }}
             />
@@ -385,7 +386,7 @@ export default function ProductDetails() {
           {images.length > 1 && (
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               {images.map((img, i) => (
-                <img key={i} src={`${BASE_URL}/uploads/${img}`} alt="Thumbnail" className={`thumb${mainImage === i ? " active" : ""}`} onClick={() => setMainImage(i)} />
+                <img key={i} src={resolveImageUrl(img)} alt="Thumbnail" className={`thumb${mainImage === i ? " active" : ""}`} onClick={() => setMainImage(i)} />
               ))}
             </div>
           )}
@@ -412,7 +413,7 @@ export default function ProductDetails() {
                   return (
                     <div key={i} className={`sub-chip${isSelected ? " selected" : ""}`} onClick={() => toggleSub(sub)}>
                       {sub.image && (
-                        <img src={`${BASE_URL}/uploads/${sub.image}`} alt={sub.name} style={{ width: "100%", height: 52, objectFit: "cover", borderRadius: 8, marginBottom: 6 }} onError={(e) => { e.target.src = "https://via.placeholder.com/100x52?text=Service"; }} />
+                        <img src={resolveImageUrl(sub.image)} alt={sub.name} style={{ width: "100%", height: 52, objectFit: "cover", borderRadius: 8, marginBottom: 6 }} onError={(e) => { e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjUyIiB4bWxucz0iaHR0cDovL3d3cy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iNTIiIGZpbGw9IiNmM2Y0ZjYiLz48dGV4dCB4PSI1MCIgeT0iMjYiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+U2VydmljZTwvdGV4dD48L3N2Zz4="; }} />
                       )}
                       <span style={{ fontSize: 11, fontWeight: 600, color: T.text, textAlign: "center", lineHeight: 1.3, marginBottom: 4 }}>{sub.name}</span>
                       <span style={{ fontSize: 12, fontWeight: 800, color: T.green }}>₹{sub.price}</span>
@@ -441,7 +442,7 @@ export default function ProductDetails() {
         {/* Hero image */}
         <div style={{ position: "relative" }}>
           <img
-            src={images[mainImage] ? `${BASE_URL}/uploads/${images[mainImage]}` : "https://via.placeholder.com/400x280?text=Service"}
+            src={images[mainImage] ? resolveImageUrl(images[mainImage]) : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI4MCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjIwMCIgeT0iMTQwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkNlcnZpY2U8L3RleHQ+PC9zdmc+"}
             alt={product.name}
             style={{ width: "100%", height: 260, objectFit: "cover", display: "block" }}
           />
@@ -456,7 +457,7 @@ export default function ProductDetails() {
         {images.length > 1 && (
           <div style={{ background: T.bgWhite, padding: "12px 16px", display: "flex", gap: 10, overflowX: "auto" }}>
             {images.map((img, i) => (
-              <img key={i} src={`${BASE_URL}/uploads/${img}`} alt="Thumb" className={`thumb${mainImage === i ? " active" : ""}`} onClick={() => setMainImage(i)} />
+              <img key={i} src={resolveImageUrl(img)} alt="Thumb" className={`thumb${mainImage === i ? " active" : ""}`} onClick={() => setMainImage(i)} />
             ))}
           </div>
         )}
@@ -491,10 +492,10 @@ export default function ProductDetails() {
                   >
                     {sub.image && (
                       <img
-                        src={`${BASE_URL}/uploads/${sub.image}`}
+                        src={resolveImageUrl(sub.image)}
                         alt={sub.name}
                         style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 8, flexShrink: 0 }}
-                        onError={(e) => { e.target.src = "https://via.placeholder.com/48x48?text=S"; }}
+                        onError={(e) => { e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iMjQiIHk9IjI0IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iOCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UzwvdGV4dD48L3N2Zz4="; }}
                       />
                     )}
                     <div style={{ flex: 1 }}>
